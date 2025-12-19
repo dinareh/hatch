@@ -2057,110 +2057,129 @@ newButton("Run Code",
     end
 )
 
---- Gets ALL scripts with remote names from call path
+--- Renames remote instances and gets their calling scripts
 newButton(
     "Get Script",
     function() 
-        return "Click to copy scripts - renames remotes to calling script's last WaitForChild" 
+        return "Click to rename remotes and copy their calling scripts" 
     end,
     function()
-        local results = {}
-        local remoteCounts = {}
+        local remoteStats = {}
+        local allScripts = {}
+        local renamedCount = 0
         
         for _, log in ipairs(logs) do
             if log and log.Remote then
                 local remoteId = OldDebugId(log.Remote)
                 
-                if not remoteCounts[remoteId] then
-                    remoteCounts[remoteId] = {
+                if not remoteStats[remoteId] then
+                    -- Получаем source если нужно
+                    if not log.Source then
+                        local func = log.Function
+                        if func and typeof(func) ~= 'string' then
+                            log.Source = rawget(getfenv(func), "script")
+                        end
+                    end
+                    
+                    remoteStats[remoteId] = {
                         remote = log.Remote,
                         source = log.Source,
-                        count = 0
+                        count = 1,
+                        originalName = log.Remote.Name,
+                        class = log.Remote.ClassName
                     }
+                else
+                    remoteStats[remoteId].count = remoteStats[remoteId].count + 1
                 end
-                remoteCounts[remoteId].count = remoteCounts[remoteId].count + 1
             end
         end
         
-        -- Обрабатываем уникальные ремоуты
-        for id, data in pairs(remoteCounts) do
-            -- Получаем source если нужно
-            if not data.source then
-                for _, log in ipairs(logs) do
-                    if log and log.Remote and OldDebugId(log.Remote) == id then
-                        local func = log.Function
-                        if func and typeof(func) ~= 'string' then
-                            data.source = rawget(getfenv(func), "script")
-                        end
-                        break
-                    end
+        -- Функция для получения имени из пути скрипта
+        local function getNameFromScriptPath(source)
+            if not source then return nil end
+            
+            local sourcePath = v2s(source)
+            
+            -- Ищем последнее WaitForChild в пути
+            local matches = {}
+            for match in sourcePath:gmatch(':WaitForChild%("([^"]+)"%)') do
+                table.insert(matches, match)
+            end
+            
+            if #matches > 0 then
+                local lastName = matches[#matches]
+                -- Проверяем, не является ли это общими именами
+                if lastName ~= "RemoteFunction" and lastName ~= "RemoteEvent" and lastName ~= "Remote" then
+                    return lastName
                 end
             end
             
-            -- Получаем путь скрипта
-            local scriptPath = data.source and v2s(data.source) or "nil"
+            -- Ищем последнюю часть после последней точки
+            local lastPart = sourcePath:match("[^%.]+$")
+            if lastPart then
+                -- Убираем кавычки и скобки если есть
+                lastPart = lastPart:gsub('"', ''):gsub(')', ''):gsub('(', '')
+                if lastPart ~= "RemoteFunction" and lastPart ~= "RemoteEvent" then
+                    return lastPart
+                end
+            end
             
-            -- Извлекаем последнее имя из пути скрипта
-            local remoteName = "Remote"
-            if scriptPath ~= "nil" then
-                -- Ищем последнее WaitForChild("...")
-                local lastWaitForChild = scriptPath:match(':WaitForChild%("([^"]+)"%)[^:WaitForChild]*$')
-                if lastWaitForChild then
-                    remoteName = lastWaitForChild
+            return nil
+        end
+        
+        -- Переименовываем ремоуты и собираем информацию
+        for id, stat in pairs(remoteStats) do
+            local newName = getNameFromScriptPath(stat.source)
+            
+            if newName and stat.remote and stat.remote.Parent then
+                -- Пробуем переименовать ремоут в игре
+                local success, errorMsg = pcall(function()
+                    stat.remote.Name = newName
+                end)
+                
+                if success then
+                    renamedCount = renamedCount + 1
+                    stat.newName = newName
                 else
-                    -- Ищем последнюю часть после точки
-                    local lastPart = scriptPath:match("[^%.]+$")
-                    if lastPart then
-                        lastPart = lastPart:gsub('"', ''):gsub(')', '')
-                        if lastPart ~= "RemoteFunction" and lastPart ~= "RemoteEvent" then
-                            remoteName = lastPart
-                        end
-                    end
+                    -- Если не удалось переименовать, используем оригинальное имя
+                    stat.newName = stat.originalName
                 end
+            else
+                stat.newName = stat.originalName
             end
             
-            -- Получаем путь к родителю ремоута
-            local parent = data.remote.Parent
-            local parentPath = "game"
+            -- Получаем путь к ремоуту
+            local remotePath = v2s(stat.remote)
             
-            if parent and parent ~= game then
-                parentPath = i2p(parent)
-                if parentPath == "nil" then
-                    parentPath = v2s(parent)
-                end
-            end
-            
-            -- Формируем путь к ремоуту с новым именем
-            local remotePath = string.format('%s:WaitForChild("%s")', parentPath, remoteName)
-            
-            local result = string.format("[%s] %s (called %d times) -> %s",
-                remoteName,
+            local scriptInfo = string.format("[%s] %s (called %d times) -> %s",
+                stat.newName,
                 remotePath,
-                data.count,
-                scriptPath
+                stat.count,
+                stat.source and v2s(stat.source) or "nil"
             )
-            
-            table.insert(results, result)
+            table.insert(allScripts, scriptInfo)
         end
         
         -- Сортируем по количеству вызовов
-        table.sort(results, function(a, b)
+        table.sort(allScripts, function(a, b)
             local countA = tonumber(a:match("called (%d+) times")) or 0
             local countB = tonumber(b:match("called (%d+) times")) or 0
             return countA > countB
         end)
         
-        if #results > 0 then
-            local totalCalls = 0
-            for _, data in pairs(remoteCounts) do
-                totalCalls = totalCalls + data.count
-            end
-            
-            local header = string.format("=== %d Unique Remotes (%d total calls) ===\n\n", #results, totalCalls)
-            local combined = header .. table.concat(results, "\n---\n")
-            
-            setclipboard(combined)
-            TextLabel.Text = string.format("Copied %d renamed remotes!", #results)
+        -- Статистика
+        local totalCalls = 0
+        for _, stat in pairs(remoteStats) do
+            totalCalls = totalCalls + stat.count
+        end
+        
+        local header = string.format("=== Renamed %d/%d remotes ===\n", renamedCount, #allScripts)
+        header = header .. string.format("Total calls: %d\n\n", totalCalls)
+        local combinedScripts = header .. table.concat(allScripts, "\n---\n")
+        
+        if #allScripts > 0 then
+            setclipboard(combinedScripts)
+            TextLabel.Text = string.format("Renamed %d remotes and copied info!", renamedCount)
         else
             TextLabel.Text = "No remotes found!"
         end
