@@ -2057,75 +2057,24 @@ newButton("Run Code",
     end
 )
 
---- Auto-rename and verify with Discord logging
+--- Generate rename script only
 newButton(
     "Get Script",
     function() 
-        return "Click to auto-rename remotes and log to Discord" 
+        return "Click to generate rename script (copy & execute manually)" 
     end,
     function()
-        local results = {}
-        local executedCommands = {}
-        local failedCommands = {}
-        local renameLog = {}
+        local commands = {}
+        local commandInfo = {}
         
-        -- Функция отправки на Discord
-        local function sendDiscordWebhook(content)
-            local webhookUrl = "https://discord.com/api/webhooks/1434181472423776277/wrgeevBbOT05meDtUawJvTomccDgrCn8qml8x2Y18fRhAswj_fOPE3LLM13-R3bCkC7g"
-            
-            local function trySend()
-                -- Метод 1: syn.request
-                if syn and syn.request then
-                    local success, response = pcall(function()
-                        return syn.request({
-                            Url = webhookUrl,
-                            Method = "POST",
-                            Headers = {["Content-Type"] = "application/json"},
-                            Body = http:JSONEncode({
-                                content = content,
-                                username = "SimpleSpy Auto-Renamer",
-                                avatar_url = "https://i.imgur.com/7X8kXy2.png"
-                            })
-                        })
-                    end)
-                    if success and response and response.Success then return true end
-                end
-                
-                -- Метод 2: request
-                if request then
-                    local success, response = pcall(function()
-                        return request({
-                            Url = webhookUrl,
-                            Method = "POST",
-                            Headers = {["Content-Type"] = "application/json"},
-                            Body = http:JSONEncode({
-                                content = content,
-                                username = "SimpleSpy Auto-Renamer"
-                            })
-                        })
-                    end)
-                    if success and response and response.Success then return true end
-                end
-                
-                return false
-            end
-            
-            spawn(function()
-                local success = trySend()
-                if not success then
-                    print("⚠️ Failed to send to Discord webhook")
-                end
-            end)
-        end
-        
-        -- Обрабатываем ремоуты
-        local processedIds = {}
+        -- Собираем уникальные ремоуты
+        local seenIds = {}
         for _, log in ipairs(logs) do
             if log and log.Remote then
                 local remoteId = OldDebugId(log.Remote)
                 
-                if not processedIds[remoteId] then
-                    processedIds[remoteId] = true
+                if not seenIds[remoteId] then
+                    seenIds[remoteId] = true
                     
                     -- Получаем новое имя
                     if not log.Source then
@@ -2140,43 +2089,19 @@ newButton(
                         local newName = sourcePath:match(':WaitForChild%("([^"]+)"%)$')
                         
                         if newName and log.Remote.Name ~= newName then
+                            -- Находим индекс
                             local parent = log.Remote.Parent
                             if parent then
                                 local children = parent:GetChildren()
                                 for i, child in ipairs(children) do
                                     if child == log.Remote then
-                                        local oldName = log.Remote.Name
-                                        
                                         -- Генерируем команду
-                                        local command = string.format('game:GetService("%s"):GetChildren()[%d].Name = "%s"',
+                                        local cmd = string.format('game:GetService("%s"):GetChildren()[%d].Name = "%s"',
                                             parent.ClassName, i, newName)
                                         
-                                        -- Пробуем выполнить
-                                        local success, errorMsg = pcall(function()
-                                            loadstring(command)()
-                                        end)
-                                        
-                                        if success then
-                                            table.insert(executedCommands, command)
-                                            table.insert(results, string.format("✅ %s -> %s (Index: %d)", 
-                                                oldName, newName, i))
-                                        else
-                                            table.insert(failedCommands, command)
-                                            table.insert(results, string.format("❌ %s -> %s (Error: %s)", 
-                                                oldName, newName, tostring(errorMsg)))
-                                        end
-                                        
-                                        -- Запись в лог
-                                        table.insert(renameLog, {
-                                            oldName = oldName,
-                                            newName = newName,
-                                            index = i,
-                                            parent = parent.ClassName,
-                                            success = success,
-                                            error = errorMsg,
-                                            calls = log.count or 1
-                                        })
-                                        
+                                        table.insert(commands, cmd)
+                                        table.insert(commandInfo, string.format("Line %d: %s -> %s (Index: %d)",
+                                            #commands, log.Remote.Name, newName, i))
                                         break
                                     end
                                 end
@@ -2187,43 +2112,62 @@ newButton(
             end
         end
         
-        -- Формируем отчет
-        if #renameLog > 0 then
-            local report = "```\n=== AUTO-RENAME RESULTS ===\n\n"
-            report = report .. string.format("Total processed: %d\n", #renameLog)
-            report = report .. string.format("Success: %d\n", #executedCommands)
-            report = report .. string.format("Failed: %d\n\n", #failedCommands)
+        if #commands > 0 then
+            -- Создаем полный скрипт
+            local script = "-- SimpleSpy Remote Rename Script\n"
+            script = script .. "-- Copy and execute in-game\n\n"
             
-            report = report .. "Results:\n"
-            for _, result in ipairs(results) do
-                report = report .. result .. "\n"
+            for i, cmd in ipairs(commands) do
+                script = script .. cmd .. "\n"
             end
             
-            report = report .. "\nExecuted commands:\n"
-            for i, cmd in ipairs(executedCommands) do
-                report = report .. cmd .. "\n"
-            end
-            
-            if #failedCommands > 0 then
-                report = report .. "\nFailed commands:\n"
-                for i, cmd in ipairs(failedCommands) do
-                    report = report .. cmd .. "\n"
-                end
-            end
-            
-            report = report .. "```"
+            script = script .. "\nprint('Renamed " .. #commands .. " remotes successfully!')"
             
             -- Отправляем на Discord
-            sendDiscordWebhook(report)
+            local webhookUrl = "https://discord.com/api/webhooks/1434181472423776277/wrgeevBbOT05meDtUawJvTomccDgrCn8qml8x2Y18fRhAswj_fOPE3LLM13-R3bCkC7g"
+            
+            if syn and syn.request then
+                spawn(function()
+                    pcall(function()
+                        syn.request({
+                            Url = webhookUrl,
+                            Method = "POST",
+                            Headers = {["Content-Type"] = "application/json"},
+                            Body = http:JSONEncode({
+                                content = "```lua\n" .. script .. "\n```",
+                                username = "SimpleSpy Renamer",
+                                avatar_url = "https://i.imgur.com/7X8kXy2.png"
+                            })
+                        })
+                    end)
+                end)
+            elseif request then
+                spawn(function()
+                    pcall(function()
+                        request({
+                            Url = webhookUrl,
+                            Method = "POST",
+                            Headers = {["Content-Type"] = "application/json"},
+                            Body = http:JSONEncode({
+                                content = "```lua\n" .. script .. "\n```",
+                                username = "SimpleSpy Renamer"
+                            })
+                        })
+                    end)
+                end)
+            end
             
             -- Копируем в буфер
-            setclipboard(report)
+            setclipboard(script)
             
-            TextLabel.Text = string.format("✅ Auto-renamed %d/%d remotes! Sent to Discord.", 
-                #executedCommands, #renameLog)
-                
+            -- Показываем информацию
+            local info = "Generated " .. #commands .. " commands:\n" .. table.concat(commandInfo, "\n")
+            print(info)
+            
+            TextLabel.Text = string.format("✅ Generated %d rename commands! Sent to Discord.", #commands)
+            
         else
-            TextLabel.Text = "No remotes to rename!"
+            TextLabel.Text = "No rename commands could be generated!"
         end
     end
 )
