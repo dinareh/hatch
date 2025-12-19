@@ -2057,16 +2057,15 @@ newButton("Run Code",
     end
 )
 
---- Gets the calling script for ALL logged remotes (unique only)
+--- Gets the calling script for ALL logged remotes with counts
 newButton(
     "Get Script",
     function() 
-        return "Click to copy calling scripts for ALL UNIQUE logged remotes\nWARNING: Not super reliable, nil == could not find" 
+        return "Click to copy calling scripts with call counts\nShows only unique remotes with how many times they were called" 
     end,
     function()
-        -- Используем таблицу для отслеживания уникальных комбинаций
-        local uniqueScripts = {}
-        local uniqueCombinations = {}
+        -- Таблица для подсчета вызовов и отслеживания source
+        local remoteStats = {}
         local allScripts = {}
         
         for _, log in ipairs(logs) do
@@ -2079,34 +2078,57 @@ newButton(
                     end
                 end
                 
-                -- Создаем ключ для уникальности: комбинация Remote + Source
-                local remoteDebugId = OldDebugId(log.Remote)
-                local sourcePath = log.Source and log.Source:GetFullName() or "nil"
-                local uniqueKey = string.format("%s|%s", remoteDebugId, sourcePath)
+                -- Используем DebugId для уникальной идентификации ремоута
+                local remoteId = OldDebugId(log.Remote)
                 
-                -- Проверяем, не видели ли мы уже эту комбинацию
-                if not uniqueCombinations[uniqueKey] then
-                    uniqueCombinations[uniqueKey] = true
-                    
-                    -- Добавить информацию о remote и его source
-                    local scriptInfo = string.format("[%s] %s -> %s",
-                        log.Name,
-                        tostring(log.Remote),
-                        log.Source and v2s(log.Source) or "nil"
-                    )
-                    
-                    table.insert(uniqueScripts, scriptInfo)
+                if not remoteStats[remoteId] then
+                    -- Первое появление этого ремоута
+                    remoteStats[remoteId] = {
+                        name = log.Name,
+                        remote = log.Remote,
+                        source = log.Source,
+                        count = 1
+                    }
+                else
+                    -- Увеличиваем счетчик вызовов
+                    remoteStats[remoteId].count = remoteStats[remoteId].count + 1
                 end
             end
         end
         
-        -- Сортируем по имени для удобства чтения
-        table.sort(uniqueScripts)
+        -- Преобразуем в массив и сортируем
+        for _, stat in pairs(remoteStats) do
+            local scriptInfo = string.format("[%s] %s (called %d times) -> %s",
+                stat.name,
+                tostring(stat.remote),
+                stat.count,
+                stat.source and v2s(stat.source) or "nil"
+            )
+            table.insert(allScripts, scriptInfo)
+        end
         
-        if #uniqueScripts > 0 then
-            local combinedScripts = table.concat(uniqueScripts, "\n---\n")
+        -- Сортируем по количеству вызовов (от большего к меньшему)
+        table.sort(allScripts, function(a, b)
+            local countA = tonumber(a:match("called (%d+) times")) or 0
+            local countB = tonumber(b:match("called (%d+) times")) or 0
+            return countA > countB
+        end)
+        
+        -- Добавляем заголовок с общей статистикой
+        local totalCalls = 0
+        for _, stat in pairs(remoteStats) do
+            totalCalls = totalCalls + stat.count
+        end
+        
+        local header = string.format("=== Remote Calling Scripts ===\n")
+        header = header .. string.format("Unique remotes: %d | Total calls: %d\n\n", #allScripts, totalCalls)
+        
+        local combinedScripts = header .. table.concat(allScripts, "\n---\n")
+        
+        if #allScripts > 0 then
             setclipboard(combinedScripts)
-            TextLabel.Text = string.format("Copied %d unique scripts!", #uniqueScripts)
+            TextLabel.Text = string.format("Copied %d unique remotes (%d total calls)!", 
+                #allScripts, totalCalls)
         else
             TextLabel.Text = "No scripts found!"
         end
