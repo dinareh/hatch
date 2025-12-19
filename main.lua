@@ -2057,11 +2057,11 @@ newButton("Run Code",
     end
 )
 
---- Renames remote instances and gets their calling scripts
+--- Force renames remote instances and gets their calling scripts
 newButton(
     "Get Script",
     function() 
-        return "Click to rename remotes and copy their calling scripts" 
+        return "Click to FORCE rename remotes and copy their calling scripts" 
     end,
     function()
         local remoteStats = {}
@@ -2073,7 +2073,6 @@ newButton(
                 local remoteId = OldDebugId(log.Remote)
                 
                 if not remoteStats[remoteId] then
-                    -- Получаем source если нужно
                     if not log.Source then
                         local func = log.Function
                         if func and typeof(func) ~= 'string' then
@@ -2108,18 +2107,16 @@ newButton(
             
             if #matches > 0 then
                 local lastName = matches[#matches]
-                -- Проверяем, не является ли это общими именами
                 if lastName ~= "RemoteFunction" and lastName ~= "RemoteEvent" and lastName ~= "Remote" then
                     return lastName
                 end
             end
             
-            -- Ищем последнюю часть после последней точки
-            local lastPart = sourcePath:match("[^%.]+$")
+            -- Ищем последнюю часть пути
+            local lastPart = sourcePath:match('[^%.:]+%??$')
             if lastPart then
-                -- Убираем кавычки и скобки если есть
-                lastPart = lastPart:gsub('"', ''):gsub(')', ''):gsub('(', '')
-                if lastPart ~= "RemoteFunction" and lastPart ~= "RemoteEvent" then
+                lastPart = lastPart:gsub('"', ''):gsub(')', ''):gsub('(', ''):gsub('%?', '')
+                if lastPart ~= "RemoteFunction" and lastPart ~= "RemoteEvent" and lastPart ~= "" then
                     return lastPart
                 end
             end
@@ -2127,28 +2124,63 @@ newButton(
             return nil
         end
         
-        -- Переименовываем ремоуты и собираем информацию
+        -- Переименовываем ремоуты с использованием makewriteable
         for id, stat in pairs(remoteStats) do
             local newName = getNameFromScriptPath(stat.source)
             
-            if newName and stat.remote and stat.remote.Parent then
-                -- Пробуем переименовать ремоут в игре
-                local success, errorMsg = pcall(function()
+            if newName and stat.remote then
+                -- Сохраняем старый метатаблицу
+                local rawMeta = getrawmetatable(stat.remote)
+                local wasReadOnly = false
+                
+                if rawMeta then
+                    wasReadOnly = isreadonly(rawMeta)
+                    if wasReadOnly then
+                        -- Пытаемся сделать записываемым
+                        local success = pcall(function()
+                            makewritable(rawMeta)
+                        end)
+                        
+                        if not success then
+                            -- Альтернативный метод
+                            pcall(setreadonly, rawMeta, false)
+                        end
+                    end
+                end
+                
+                -- Пробуем переименовать
+                local success = pcall(function()
                     stat.remote.Name = newName
                 end)
                 
                 if success then
                     renamedCount = renamedCount + 1
                     stat.newName = newName
+                    
+                    -- Восстанавливаем readonly если было
+                    if wasReadOnly and rawMeta then
+                        pcall(function()
+                            makereadonly(rawMeta)
+                        end)
+                    end
                 else
-                    -- Если не удалось переименовать, используем оригинальное имя
-                    stat.newName = stat.originalName
+                    -- Пробуем другой метод
+                    success = pcall(function()
+                        setproperty(stat.remote, "Name", newName)
+                    end)
+                    
+                    if success then
+                        renamedCount = renamedCount + 1
+                        stat.newName = newName
+                    else
+                        stat.newName = stat.originalName
+                    end
                 end
             else
                 stat.newName = stat.originalName
             end
             
-            -- Получаем путь к ремоуту
+            -- Получаем обновленный путь
             local remotePath = v2s(stat.remote)
             
             local scriptInfo = string.format("[%s] %s (called %d times) -> %s",
@@ -2160,7 +2192,7 @@ newButton(
             table.insert(allScripts, scriptInfo)
         end
         
-        -- Сортируем по количеству вызовов
+        -- Сортируем
         table.sort(allScripts, function(a, b)
             local countA = tonumber(a:match("called (%d+) times")) or 0
             local countB = tonumber(b:match("called (%d+) times")) or 0
@@ -2173,19 +2205,19 @@ newButton(
             totalCalls = totalCalls + stat.count
         end
         
-        local header = string.format("=== Renamed %d/%d remotes ===\n", renamedCount, #allScripts)
-        header = header .. string.format("Total calls: %d\n\n", totalCalls)
+        local header = string.format("=== Force Renamed Remotes ===\n")
+        header = header .. string.format("Successfully renamed: %d/%d\n", renamedCount, #allScripts)
+        header = header .. string.format("Total calls recorded: %d\n\n", totalCalls)
         local combinedScripts = header .. table.concat(allScripts, "\n---\n")
         
         if #allScripts > 0 then
             setclipboard(combinedScripts)
-            TextLabel.Text = string.format("Renamed %d remotes and copied info!", renamedCount)
+            TextLabel.Text = string.format("Force renamed %d remotes!", renamedCount)
         else
             TextLabel.Text = "No remotes found!"
         end
     end
 )
-
         
 --- Decompiles the script that fired the remote and puts it in the code box
 newButton("Function Info",function() return "Click to view calling function information" end,
