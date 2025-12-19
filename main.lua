@@ -2057,67 +2057,119 @@ newButton("Run Code",
     end
 )
 
---- Gets the calling script for ALL logged remotes (compact format)
+--- Gets the calling script for ALL logged remotes with counts and GetChildren path
 newButton(
     "Get Script",
     function() 
-        return "Click to copy remote paths with call counts" 
+        return "Click to copy calling scripts with call counts\nShows only unique remotes with how many times they were called" 
     end,
     function()
+        -- Таблица для подсчета вызовов и отслеживания source
         local remoteStats = {}
         local allScripts = {}
+        
+        -- Функция для получения пути с GetChildren
+        local function getRemotePathWithChildren(remote)
+            local parent = remote.Parent
+            if not parent then
+                return 'nil'
+            end
+            
+            -- Получаем индекс через GetChildren
+            local children = parent:GetChildren()
+            local index = nil
+            for i, child in ipairs(children) do
+                if child == remote then
+                    index = i
+                    break
+                end
+            end
+            
+            if index then
+                -- Получаем путь к родителю через v2s
+                local parentPath = v2s(parent)
+                -- Удаляем возможные WaitForChild и т.д. из конца
+                parentPath = parentPath:gsub(":WaitForChild%([^%)]+%)$", "")
+                parentPath = parentPath:gsub(":FindFirstChild%([^%)]+%)$", "")
+                
+                return string.format("%s:GetChildren()[%d]", parentPath, index)
+            else
+                -- Если не нашли индекс, используем обычный путь
+                return v2s(remote)
+            end
+        end
         
         for _, log in ipairs(logs) do
             if log and log.Remote then
                 if not log.Source then
+                    -- Попытаться получить source, если он еще не сохранен
                     local func = log.Function
                     if func and typeof(func) ~= 'string' then
                         log.Source = rawget(getfenv(func), "script")
                     end
                 end
                 
+                -- Используем полный путь как ключ для уникальности
                 local remoteFullPath = log.Remote:GetFullName()
-                local remoteKey = log.Remote.ClassName .. "|" .. remoteFullPath
+                local remoteClass = log.Remote.ClassName
                 
-                if not remoteStats[remoteKey] then
-                    remoteStats[remoteKey] = {
-                        remotePath = v2s(log.Remote), -- Используем v2s для правильного пути
+                if not remoteStats[remoteFullPath] then
+                    -- Первое появление этого ремоута
+                    remoteStats[remoteFullPath] = {
+                        name = log.Name,
+                        remote = log.Remote,
                         source = log.Source,
-                        count = 1
+                        count = 1,
+                        class = remoteClass
                     }
                 else
-                    remoteStats[remoteKey].count = remoteStats[remoteKey].count + 1
+                    -- Увеличиваем счетчик вызовов
+                    remoteStats[remoteFullPath].count = remoteStats[remoteFullPath].count + 1
                 end
             end
         end
         
-        -- Собираем результаты
+        -- Преобразуем в массив и сортируем
         for _, stat in pairs(remoteStats) do
-            local line = string.format("%s (called %d times) -> %s",
-                stat.remotePath,
+            -- Получаем путь с GetChildren
+            local remotePath = getRemotePathWithChildren(stat.remote)
+            
+            local scriptInfo = string.format("[%s] %s (called %d times) -> %s",
+                stat.class,
+                remotePath,
                 stat.count,
                 stat.source and v2s(stat.source) or "nil"
             )
-            table.insert(allScripts, line)
+            table.insert(allScripts, scriptInfo)
         end
         
-        -- Сортируем по количеству вызовов
+        -- Сортируем по количеству вызовов (от большего к меньшему)
         table.sort(allScripts, function(a, b)
             local countA = tonumber(a:match("called (%d+) times")) or 0
             local countB = tonumber(b:match("called (%d+) times")) or 0
             return countA > countB
         end)
         
+        -- Добавляем заголовок с общей статистикой
+        local totalCalls = 0
+        for _, stat in pairs(remoteStats) do
+            totalCalls = totalCalls + stat.count
+        end
+        
+        local header = string.format("=== Remote Calling Scripts ===\n")
+        header = header .. string.format("Unique remotes: %d | Total calls: %d\n\n", #allScripts, totalCalls)
+        
+        local combinedScripts = header .. table.concat(allScripts, "\n---\n")
+        
         if #allScripts > 0 then
-            local combinedScripts = table.concat(allScripts, "\n")
             setclipboard(combinedScripts)
-            TextLabel.Text = string.format("Copied %d unique remotes!", #allScripts)
+            TextLabel.Text = string.format("Copied %d unique remotes (%d total calls)!", 
+                #allScripts, totalCalls)
         else
-            TextLabel.Text = "No remotes found!"
+            TextLabel.Text = "No scripts found!"
         end
     end
 )
-
 
         
 --- Decompiles the script that fired the remote and puts it in the code box
