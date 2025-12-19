@@ -2057,152 +2057,110 @@ newButton("Run Code",
     end
 )
 
---- Generate and auto-execute rename script
+--- Simple rename script generator
 newButton(
     "Get Script",
     function() 
-        return "Click to generate, send to Discord AND auto-execute rename script" 
+        return "Click for simple rename script (copy & execute)" 
     end,
     function()
-        local remoteStats = {}
-        local renameScripts = {}
-        local allScripts = {}
-        local totalScript = ""
+        local commands = {}
+        local remoteInfo = {}
         
-        -- Собираем статистику
+        -- Ищем все уникальные ремоуты
+        local seenIds = {}
         for _, log in ipairs(logs) do
-            if log and log.Remote then
-                local remoteId = OldDebugId(log.Remote)
+            if log and log.Remote and not seenIds[OldDebugId(log.Remote)] then
+                seenIds[OldDebugId(log.Remote)] = true
                 
-                if not remoteStats[remoteId] then
-                    if not log.Source then
-                        local func = log.Function
-                        if func and typeof(func) ~= 'string' then
-                            log.Source = rawget(getfenv(func), "script")
-                        end
+                -- Получаем имя из скрипта
+                if not log.Source then
+                    local func = log.Function
+                    if func and typeof(func) ~= 'string' then
+                        log.Source = rawget(getfenv(func), "script")
                     end
-                    
-                    remoteStats[remoteId] = {
-                        remote = log.Remote,
-                        source = log.Source,
-                        count = 1,
-                        originalName = log.Remote.Name,
-                        class = log.Remote.ClassName
-                    }
-                else
-                    remoteStats[remoteId].count = remoteStats[remoteId].count + 1
                 end
-            end
-        end
-        
-        -- Функция для получения имени
-        local function getNameFromScriptPath(source)
-            if not source then return nil end
-            
-            local sourcePath = v2s(source)
-            local lastPart = sourcePath:match(':WaitForChild%("([^"]+)"%)$')
-            return lastPart
-        end
-        
-        -- Генерируем команды
-        for id, stat in pairs(remoteStats) do
-            local newName = getNameFromScriptPath(stat.source)
-            
-            if newName and stat.remote then
-                -- Находим родителя и индекс
-                local parent = stat.remote.Parent
-                if parent then
-                    local children = parent:GetChildren()
-                    for i, child in ipairs(children) do
-                        if child == stat.remote then
-                            -- Получаем путь к родителю
-                            local parentPath = "game"
-                            if parent ~= game then
-                                parentPath = i2p(parent)
-                                if parentPath == "nil" then
-                                    parentPath = v2s(parent)
+                
+                if log.Source then
+                    local sourcePath = v2s(log.Source)
+                    local newName = sourcePath:match(':WaitForChild%("([^"]+)"%)$')
+                    
+                    if newName then
+                        -- Находим индекс ремоута
+                        local parent = log.Remote.Parent
+                        if parent then
+                            local children = parent:GetChildren()
+                            for i, child in ipairs(children) do
+                                if child == log.Remote then
+                                    -- Генерируем команду
+                                    local parentService = ""
+                                    if parent:IsA("DataModel") then
+                                        parentService = "game"
+                                    else
+                                        parentService = string.format('game:GetService("%s")', parent.ClassName)
+                                    end
+                                    
+                                    local cmd = string.format('%s:GetChildren()[%d].Name = "%s"', parentService, i, newName)
+                                    table.insert(commands, cmd)
+                                    
+                                    -- Информация
+                                    table.insert(remoteInfo, string.format("%s -> %s (Index: %d)", 
+                                        log.Remote.Name, newName, i))
+                                    break
                                 end
                             end
-                            
-                            -- Очищаем путь
-                            parentPath = parentPath:gsub(':WaitForChild%("[^"]+"%)$', '')
-                            
-                            -- Генерируем две команды: одна для переименования, другая как альтернатива
-                            local cmd1 = string.format('%s:GetChildren()[%d].Name = "%s"', parentPath, i, newName)
-                            local cmd2 = string.format('game:GetService("%s"):GetChildren()[%d].Name = "%s"', parent.ClassName, i, newName)
-                            
-                            table.insert(renameScripts, cmd1)
-                            
-                            local scriptInfo = string.format("Command: %s\nFrom: %s\nCalled: %d times\n---",
-                                cmd1,
-                                stat.source and v2s(stat.source) or "nil",
-                                stat.count
-                            )
-                            table.insert(allScripts, scriptInfo)
-                            break
                         end
                     end
                 end
             end
         end
         
-        -- Создаем скрипт для выполнения
-        if #renameScripts > 0 then
-            totalScript = "-- Auto-rename script for SimpleSpy\n"
-            totalScript = totalScript .. string.format("-- Generated at: %s\n", os.date("%X"))
-            totalScript = totalScript .. string.format("-- Total commands: %d\n\n", #renameScripts)
+        if #commands > 0 then
+            -- Создаем полный скрипт
+            local script = "-- Remote Rename Commands\n"
+            script = script .. "-- Execute each line or all at once\n\n"
             
-            -- Добавляем команды
-            for i, cmd in ipairs(renameScripts) do
-                totalScript = totalScript .. cmd .. "\n"
+            for i, cmd in ipairs(commands) do
+                script = script .. cmd .. "\n"
             end
             
-            totalScript = totalScript .. "\nprint('✅ Renamed " .. #renameScripts .. " remotes!')"
+            script = script .. "\nprint('Renamed " .. #commands .. " remotes')"
             
-            -- Копируем в буфер
-            setclipboard(totalScript)
-            
-            -- Пытаемся выполнить скрипт
-            local success, errorMsg = pcall(function()
-                loadstring(totalScript)()
-            end)
+            -- Копируем
+            setclipboard(script)
             
             -- Отправляем на Discord
             local webhookUrl = "https://discord.com/api/webhooks/1434181472423776277/wrgeevBbOT05meDtUawJvTomccDgrCn8qml8x2Y18fRhAswj_fOPE3LLM13-R3bCkC7g"
             
             if request then
                 spawn(function()
-                    local discordSuccess = pcall(function()
-                        local data = {
-                            content = "```lua\n" .. totalScript .. "\n```\n**Execution result:** " .. (success and "✅ SUCCESS" or "❌ FAILED: " .. tostring(errorMsg)),
-                            username = "SimpleSpy Auto-Renamer",
-                            avatar_url = "https://i.imgur.com/7X8kXy2.png"
-                        }
-                        
+                    pcall(function()
                         request({
                             Url = webhookUrl,
                             Method = "POST",
                             Headers = {
                                 ["Content-Type"] = "application/json"
                             },
-                            Body = game:GetService("HttpService"):JSONEncode(data)
+                            Body = game:GetService("HttpService"):JSONEncode({
+                                content = "```lua\n" .. script .. "\n```",
+                                username = "SimpleSpy Renamer"
+                            })
                         })
                     end)
                 end)
             end
             
-            if success then
-                TextLabel.Text = string.format("✅ Executed %d rename commands!", #renameScripts)
-            else
-                TextLabel.Text = string.format("⚠️ Copied %d commands (execution failed)", #renameScripts)
-            end
+            TextLabel.Text = string.format("✅ Generated %d rename commands!", #commands)
+            
+            -- Показываем информацию
+            local info = "Renames to make:\n" .. table.concat(remoteInfo, "\n")
+            print(info)
             
         else
-            TextLabel.Text = "No rename commands generated!"
+            TextLabel.Text = "No rename commands could be generated!"
         end
     end
 )
-
         
         
 --- Decompiles the script that fired the remote and puts it in the code box
