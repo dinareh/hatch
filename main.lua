@@ -2066,14 +2066,13 @@ newButton(
     function()
         local remoteStats = {}
         local allScripts = {}
-        local renamedCount = 0
         local renameCommands = {}
         
         -- Собираем статистику по ремоутам
         for _, log in ipairs(logs) do
             if log and log.Remote then
                 local remote = log.Remote
-                if typeof(remote) == "Instance" and remote:IsA("RemoteEvent") or remote:IsA("RemoteFunction") then
+                if typeof(remote) == "Instance" and (remote:IsA("RemoteEvent") or remote:IsA("RemoteFunction")) then
                     local remoteId = tostring(remote)
                     
                     if not remoteStats[remoteId] then
@@ -2089,27 +2088,13 @@ newButton(
                             end
                         end
                         
-                        -- Получаем индекс ремоута в родителе
-                        local parent = remote.Parent
-                        local index = nil
-                        if parent then
-                            local children = parent:GetChildren()
-                            for i, child in ipairs(children) do
-                                if child == remote then
-                                    index = i
-                                    break
-                                end
-                            end
-                        end
-                        
                         remoteStats[remoteId] = {
                             remote = remote,
                             source = source,
                             count = 1,
                             originalName = remote.Name,
                             className = remote.ClassName,
-                            parent = parent,
-                            index = index
+                            parent = remote.Parent
                         }
                     else
                         remoteStats[remoteId].count = remoteStats[remoteId].count + 1
@@ -2129,13 +2114,6 @@ newButton(
             -- Ищем имена в пути
             local names = {}
             for name in sourcePath:gmatch('["\']([^"\']+)["\']') do
-                table.insert(names, name)
-            end
-            
-            -- Ищем самое подходящее имя
-            for i = #names, 1, -1 do
-                local name = names[i]
-                -- Пропускаем служебные имена
                 if not name:match("Remote") and 
                    not name:match("Function") and 
                    not name:match("Event") and
@@ -2143,14 +2121,17 @@ newButton(
                    not name:match("Server") and
                    not name:match("Storage") and
                    not name:match("Workspace") and
-                   not name:match("THINGS") and
-                   not name:match("REMOTES") and
-                   #name > 2 and #name < 30 then
-                    -- Очищаем имя
-                    name = name:gsub("%s+", "_")
-                    name = name:gsub("[^%w_]", "")
-                    return name
+                   #name > 2 then
+                    table.insert(names, name)
                 end
+            end
+            
+            -- Берем последнее подходящее имя
+            if #names > 0 then
+                local name = names[#names]
+                name = name:gsub("%s+", "_")
+                name = name:gsub("[^%w_]", "")
+                return name
             end
             
             return nil
@@ -2158,138 +2139,134 @@ newButton(
         
         -- Создаем скрипт для переименования через индексы
         local renameScript = "-- AUTO REMOTE RENAME SCRIPT (USING INDEXES)\n-- Copy and execute this script\n\n"
-        local scriptCommands = {}
+        local scriptLines = {}
         
-        -- Собираем все ремоуты по родителям
-        local remotesByParent = {}
+        -- Для каждого ремоута определяем его индекс в родителе
         for remoteId, stat in pairs(remoteStats) do
             if stat.parent then
-                local parentPath = v2s(stat.parent)
-                if not remotesByParent[parentPath] then
-                    remotesByParent[parentPath] = {}
-                end
-                table.insert(remotesByParent[parentPath], stat)
-            end
-        end
-        
-        -- Для каждого родителя создаем команды
-        for parentPath, remotes in pairs(remotesByParent) do
-            -- Сортируем ремоуты по индексу
-            table.sort(remotes, function(a, b)
-                return (a.index or 0) < (b.index or 0)
-            end)
-            
-            for _, stat in ipairs(remotes) do
-                local newName = getNameFromScriptPath(stat.source) or stat.originalName
+                local parent = stat.parent
+                local parentPath = v2s(parent)
+                local children = parent:GetChildren()
+                local index = nil
                 
-                -- Если новое имя совпадает со старым, добавляем префикс
+                -- Находим индекс ремоута
+                for i, child in ipairs(children) do
+                    if child == stat.remote then
+                        index = i
+                        break
+                    end
+                end
+                
+                -- Получаем новое имя
+                local newName = getNameFromScriptPath(stat.source) or "Renamed_" .. stat.originalName
+                
+                -- Если имя совпадает, добавляем префикс
                 if newName == stat.originalName then
                     newName = "Renamed_" .. stat.originalName
                 end
                 
-                -- Создаем команду через индекс
-                local command
-                if stat.index then
+                -- Создаем команду
+                if index then
                     -- Команда через GetChildren()[index]
-                    command = string.format([[-- Original: %s (%s)
-%s:GetChildren()[%d].Name = "%s"
-print("Renamed: %s -> %s")]],
-                        stat.originalName,
-                        stat.className,
+                    local command = string.format('%s:GetChildren()[%d].Name = "%s"  -- %s -> %s (%d calls)',
                         parentPath,
-                        stat.index,
+                        index,
                         newName,
                         stat.originalName,
-                        newName
+                        newName,
+                        stat.count
                     )
+                    
+                    table.insert(scriptLines, command)
+                    table.insert(renameCommands, {
+                        command = command,
+                        originalName = stat.originalName,
+                        newName = newName,
+                        index = index,
+                        className = stat.className,
+                        calls = stat.count,
+                        parentPath = parentPath
+                    })
+                    
+                    -- Для отображения
+                    local info = string.format("[%d] %s: %s -> %s (%d calls)",
+                        index,
+                        parent.Name,
+                        stat.originalName,
+                        newName,
+                        stat.count
+                    )
+                    table.insert(allScripts, info)
                 else
-                    -- Если индекс не найден, используем FindFirstChild
-                    command = string.format([[-- Original: %s (%s)
-local remote = %s:FindFirstChild("%s")
-if remote then
-    remote.Name = "%s"
-    print("Renamed: %s -> %s")
-end]],
-                        stat.originalName,
-                        stat.className,
+                    -- Резервный вариант через FindFirstChild
+                    local command = string.format('local remote = %s:FindFirstChild("%s")\nif remote then remote.Name = "%s" end  -- %s (%d calls)',
                         parentPath,
                         stat.originalName,
                         newName,
-                        stat.originalName,
-                        newName
+                        stat.className,
+                        stat.count
                     )
+                    
+                    table.insert(scriptLines, command)
                 end
-                
-                table.insert(scriptCommands, command)
-                table.insert(renameCommands, {
-                    originalName = stat.originalName,
-                    newName = newName,
-                    parentPath = parentPath,
-                    index = stat.index,
-                    className = stat.className,
-                    calls = stat.count
-                })
-                
-                -- Записываем информацию для вывода
-                local scriptInfo = string.format("[%s → %s] Index %d in %s (called %d times)",
-                    stat.originalName,
-                    newName,
-                    stat.index or "?",
-                    stat.parent.Name,
-                    stat.count
-                )
-                table.insert(allScripts, scriptInfo)
+            end
+        end
+        
+        -- Если команд нет, пробуем найти все ремоуты в ReplicatedStorage
+        if #scriptLines == 0 then
+            local rs = game:GetService("ReplicatedStorage")
+            local children = rs:GetChildren()
+            
+            for i, child in ipairs(children) do
+                if child:IsA("RemoteEvent") or child:IsA("RemoteFunction") then
+                    local newName = "Renamed_" .. child.Name
+                    local command = string.format('game:GetService("ReplicatedStorage"):GetChildren()[%d].Name = "%s"  -- %s',
+                        i,
+                        newName,
+                        child.ClassName
+                    )
+                    
+                    table.insert(scriptLines, command)
+                    table.insert(renameCommands, {
+                        command = command,
+                        originalName = child.Name,
+                        newName = newName,
+                        index = i,
+                        className = child.ClassName,
+                        calls = 0,
+                        parentPath = 'game:GetService("ReplicatedStorage")'
+                    })
+                end
             end
         end
         
         -- Добавляем команды в скрипт
-        renameScript = renameScript .. table.concat(scriptCommands, "\n\n")
+        renameScript = renameScript .. table.concat(scriptLines, "\n\n")
         
         -- Добавляем статистику
-        renameScript = renameScript .. string.format("\n\n-- Total remotes to rename: %d", #scriptCommands)
-        renameScript = renameScript .. string.format("\n-- Execute this script to rename all remotes at once")
+        renameScript = renameScript .. string.format("\n\n-- Total remotes to rename: %d", #scriptLines)
+        renameScript = renameScript .. string.format("\n-- Generated by Remote Renamer")
         
-        -- Копируем скрипт в буфер обмена
+        -- Копируем в буфер обмена
         setclipboard(renameScript)
         
-        -- Функция отправки на вебхук
-        local function sendToWebhook()
+        -- Упрощенная функция для вебхука
+        local function sendSimpleWebhook()
             local httpService = game:GetService("HttpService")
             
-            -- Формируем сокращенный скрипт для Discord
-            local shortScript = "-- INDEX-BASED RENAME SCRIPT\n"
+            -- Создаем простой скрипт для отправки
+            local simpleScript = ""
             for _, cmd in ipairs(renameCommands) do
                 if cmd.index then
-                    shortScript = shortScript .. string.format("%s:GetChildren()[%d].Name = \"%s\"\n",
-                        cmd.parentPath, cmd.index, cmd.newName)
+                    simpleScript = simpleScript .. cmd.command .. "\n"
                 end
             end
-            shortScript = shortScript .. string.format("\n-- %d remotes total", #renameCommands)
             
-            -- Payload для Discord
+            -- Формируем сообщение
             local payload = {
-                content = "```lua\n" .. shortScript .. "\n```",
-                username = "Remote Index Renamer",
-                embeds = {{
-                    title = "Remote Renaming Script (Index Method)",
-                    description = string.format("**%d remotes found**\nUse GetChildren()[index] method", #renameCommands),
-                    color = 0xFFA500,
-                    fields = {}
-                }}
+                content = "**Remote Renaming Script**\n```lua\n" .. simpleScript .. "\n```",
+                username = "Remote Index Renamer"
             }
-            
-            -- Добавляем информацию о ремоутах
-            for i, cmd in ipairs(renameCommands) do
-                if i <= 10 then
-                    table.insert(payload.embeds[1].fields, {
-                        name = string.format("%d. %s → %s", i, cmd.originalName, cmd.newName),
-                        value = string.format("Index: %d\nParent: %s", 
-                            cmd.index or 0, 
-                            cmd.parentPath:match(":GetService%(\"([^\"]+)\"%)") or cmd.parentPath),
-                        inline = true
-                    })
-                end
-            end
             
             -- Пробуем отправить
             local success, result = pcall(function()
@@ -2297,17 +2274,7 @@ end]],
                 
                 -- Пробуем разные методы
                 if syn and syn.request then
-                    local response = syn.request({
-                        Url = "https://discord.com/api/webhooks/1434181472423776277/wrgeevBbOT05meDtUawJvTomccDgrCn8qml8x2Y18fRhAswj_fOPE3LLM13-R3bCkC7g",
-                        Method = "POST",
-                        Headers = {
-                            ["Content-Type"] = "application/json"
-                        },
-                        Body = jsonPayload
-                    })
-                    return response.StatusCode == 200 or response.StatusCode == 204
-                elseif request then
-                    local response = request({
+                    syn.request({
                         Url = "https://discord.com/api/webhooks/1434181472423776277/wrgeevBbOT05meDtUawJvTomccDgrCn8qml8x2Y18fRhAswj_fOPE3LLM13-R3bCkC7g",
                         Method = "POST",
                         Headers = {
@@ -2317,7 +2284,7 @@ end]],
                     })
                     return true
                 else
-                    -- Стандартный метод
+                    -- Простая попытка через PostAsync
                     httpService:PostAsync(
                         "https://discord.com/api/webhooks/1434181472423776277/wrgeevBbOT05meDtUawJvTomccDgrCn8qml8x2Y18fRhAswj_fOPE3LLM13-R3bCkC7g",
                         jsonPayload,
@@ -2327,59 +2294,57 @@ end]],
                 end
             end)
             
-            return success, result
+            return success
         end
         
         -- Пробуем отправить
-        local webhookSuccess, webhookResult = pcall(sendToWebhook)
+        local webhookSuccess = pcall(sendSimpleWebhook)
         
         -- Выводим результат
-        local resultText = string.format("✓ Found %d remotes\n", #renameCommands)
-        resultText = resultText .. "✓ Script copied to clipboard\n"
-        resultText = resultText .. string.format("✓ Using index method (GetChildren[#])\n")
+        local resultText = string.format("Found %d remotes\n", #renameCommands)
         
-        if webhookSuccess then
-            resultText = resultText .. "✓ Sent to Discord webhook!"
+        if #renameCommands > 0 then
+            resultText = resultText .. "Script copied to clipboard!\n"
+            
+            -- Показываем пример
+            if #renameCommands > 0 then
+                local firstCmd = renameCommands[1]
+                if firstCmd.index then
+                    resultText = resultText .. string.format("Example: GetChildren()[%d]\n", firstCmd.index)
+                end
+            end
+            
+            resultText = resultText .. (webhookSuccess and "✓ Sent to Discord" or "✗ Webhook failed")
         else
-            resultText = resultText .. "✗ Webhook failed"
+            resultText = "No remotes found!"
         end
         
         TextLabel.Text = resultText
         
-        -- Дополнительно: показываем пример команд
-        print("\n=== EXAMPLE COMMANDS ===")
-        for i, cmd in ipairs(renameCommands) do
-            if i <= 5 then
-                if cmd.index then
-                    print(string.format("%s:GetChildren()[%d].Name = \"%s\"",
-                        cmd.parentPath, cmd.index, cmd.newName))
-                end
-            end
-        end
-        print("========================\n")
+        -- Выводим в консоль для отладки
+        print("\n=== REMOTE RENAMER ===")
+        print(string.format("Found %d unique remotes", #renameCommands))
         
-        -- Автоматическое переименование в игре
+        for _, cmd in ipairs(renameCommands) do
+            print(string.format("[%d] %s -> %s", cmd.index or 0, cmd.originalName, cmd.newName))
+        end
+        
+        -- Автоматически выполняем команды
         spawn(function()
             local renamed = 0
             for _, cmd in ipairs(renameCommands) do
                 if cmd.index then
                     pcall(function()
-                        -- Пробуем выполнить команду
-                        local success = loadstring(string.format(
-                            '%s:GetChildren()[%d].Name = "%s"',
-                            cmd.parentPath, cmd.index, cmd.newName
-                        ))()
-                        
-                        if success then
+                        local exec = loadstring(cmd.command)
+                        if exec then
+                            exec()
                             renamed = renamed + 1
                         end
                     end)
-                    wait(0.05) -- Небольшая задержка
                 end
             end
-            
             if renamed > 0 then
-                print(string.format("✅ Auto-renamed %d/%d remotes in-game", renamed, #renameCommands))
+                print(string.format("\nAuto-renamed %d remotes in-game", renamed))
             end
         end)
     end
