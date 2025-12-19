@@ -2057,112 +2057,168 @@ newButton("Run Code",
     end
 )
 
---- Gets ALL remote scripts (always uses GetChildren[])
+--- Gets the calling script for ALL logged remotes with renamed remotes
 newButton(
     "Get Script",
     function() 
-        return "Click to copy all remote paths using GetChildren[]" 
+        return "Click to copy calling scripts with renamed remotes" 
     end,
     function()
-        local seenIds = {}
-        local results = {}
+        local remoteStats = {}
+        local allScripts = {}
         
         for _, log in ipairs(logs) do
             if log and log.Remote then
+                -- Используем DebugId как уникальный ключ
                 local remoteId = OldDebugId(log.Remote)
                 
-                -- Пропускаем если уже видели этот ремоут
-                if not seenIds[remoteId] then
-                    seenIds[remoteId] = true
-                    
-                    -- Получаем скрипт если нужно
-                    if not log.Source then
-                        local func = log.Function
-                        if func and typeof(func) ~= 'string' then
-                            log.Source = rawget(getfenv(func), "script")
-                        end
-                    end
-                    
-                    -- Получаем путь к ремоуту через GetChildren
-                    local remote = log.Remote
-                    local parent = remote.Parent
-                    
-                    if parent then
-                        -- Находим индекс ремоута
-                        local children = parent:GetChildren()
-                        local index = nil
-                        
-                        for i, child in ipairs(children) do
-                            if child == remote then
-                                index = i
-                                break
-                            end
-                        end
-                        
-                        if index then
-                            -- Получаем путь к родителю
-                            local parentPath = "game"
-                            if parent ~= game then
-                                parentPath = i2p(parent)
-                                if parentPath == "nil" then
-                                    -- Пытаемся получить путь через родителей
-                                    local tempParent = parent
-                                    local pathParts = {}
-                                    
-                                    while tempParent and tempParent ~= game do
-                                        local grandParent = tempParent.Parent
-                                        if grandParent then
-                                            local grandChildren = grandParent:GetChildren()
-                                            local grandIndex = nil
-                                            
-                                            for j, child in ipairs(grandChildren) do
-                                                if child == tempParent then
-                                                    grandIndex = j
-                                                    break
-                                                end
-                                            end
-                                            
-                                            if grandIndex then
-                                                table.insert(pathParts, 1, string.format(":GetChildren()[%d]", grandIndex))
-                                            else
-                                                table.insert(pathParts, 1, ':WaitForChild("' .. tempParent.Name .. '")')
-                                            end
-                                        end
-                                        tempParent = grandParent
-                                    end
-                                    
-                                    for _, part in ipairs(pathParts) do
-                                        parentPath = parentPath .. part
-                                    end
-                                end
-                            end
-                            
-                            -- Формируем полный путь
-                            local fullPath = string.format("%s:GetChildren()[%d]", parentPath, index)
-                            
-                            local result = string.format("%s -> %s",
-                                fullPath,
-                                log.Source and v2s(log.Source) or "nil"
-                            )
-                            
-                            table.insert(results, result)
-                        end
-                    end
+                if not remoteStats[remoteId] then
+                    remoteStats[remoteId] = {
+                        name = log.Name,
+                        remote = log.Remote,
+                        source = log.Source,
+                        count = 1,
+                        class = log.Remote.ClassName,
+                        debugId = remoteId
+                    }
+                else
+                    remoteStats[remoteId].count = remoteStats[remoteId].count + 1
                 end
             end
         end
         
-        if #results > 0 then
-            -- Сортируем для удобства
-            table.sort(results)
+        -- Функция для получения красивого имени ремоута
+        local function getNiceRemoteName(remote)
+            -- Проверяем, есть ли у ремоута нормальное имя
+            if remote.Name and remote.Name ~= "" and remote.Name ~= "RemoteFunction" and remote.Name ~= "RemoteEvent" then
+                return remote.Name
+            end
             
-            local header = string.format("=== %d Remote Paths ===\n\n", #results)
-            local combined = header .. table.concat(results, "\n---\n")
+            -- Если нет, ищем имя из пути вызова
+            return nil
+        end
+        
+        -- Функция для получения пути с красивым именем
+        local function getRemotePathWithNiceName(remote, sourcePath)
+            -- Сначала пробуем получить красивое имя ремоута
+            local niceName = getNiceRemoteName(remote)
             
-            setclipboard(combined)
-            TextLabel.Text = string.format("Copied %d remote paths!", #results)
+            -- Если нашли красивое имя, используем его
+            if niceName then
+                local parentPath = "game"
+                local parent = remote.Parent
+                
+                if parent and parent ~= game then
+                    parentPath = i2p(parent)
+                    if parentPath == "nil" then
+                        parentPath = v2s(parent)
+                    end
+                end
+                
+                return string.format('%s:WaitForChild("%s")', parentPath, niceName)
+            end
+            
+            -- Если не нашли красивое имя, пробуем извлечь из пути скрипта
+            if sourcePath then
+                -- Ищем последнее WaitForChild в пути скрипта
+                local lastChild = sourcePath:match(':WaitForChild%("([^"]+)"%)$')
+                if lastChild then
+                    local parentPath = "game"
+                    local parent = remote.Parent
+                    
+                    if parent and parent ~= game then
+                        parentPath = i2p(parent)
+                        if parentPath == "nil" then
+                            parentPath = v2s(parent)
+                        end
+                    end
+                    
+                    return string.format('%s:WaitForChild("%s")', parentPath, lastChild)
+                end
+            end
+            
+            -- Если ничего не помогло, используем стандартный путь с индексом
+            local parent = remote.Parent
+            if not parent then
+                return 'nil'
+            end
+            
+            local parentPath
+            if parent == game then
+                parentPath = "game"
+            else
+                parentPath = i2p(parent)
+                if parentPath == "nil" then
+                    parentPath = v2s(parent)
+                end
+            end
+            
+            -- Находим индекс
+            local children = parent:GetChildren()
+            local foundIndex = nil
+            
+            for i, child in ipairs(children) do
+                if child == remote then
+                    foundIndex = i
+                    break
+                end
+            end
+            
+            if foundIndex then
+                return string.format("%s:GetChildren()[%d]", parentPath, foundIndex)
+            else
+                return string.format('%s:WaitForChild("%s")', parentPath, remote.Name)
+            end
+        end
+        
+        -- Обрабатываем каждый ремоут
+        for id, stat in pairs(remoteStats) do
+            -- Получаем путь скрипта как строку
+            local sourcePathStr = stat.source and v2s(stat.source) or nil
+            
+            -- Получаем путь к ремоуту с красивым именем
+            local remotePath = getRemotePathWithNiceName(stat.remote, sourcePathStr)
+            
+            -- Пытаемся извлечь последнее имя из пути скрипта для имени ремоута
+            local remoteDisplayName = stat.name
+            if sourcePathStr then
+                local lastChild = sourcePathStr:match(':WaitForChild%("([^"]+)"%)$')
+                if lastChild and lastChild ~= "RemoteFunction" and lastChild ~= "RemoteEvent" then
+                    remoteDisplayName = lastChild
+                end
+            end
+            
+            local scriptInfo = string.format("[%s] %s (called %d times) -> %s",
+                remoteDisplayName,
+                remotePath,
+                stat.count,
+                stat.source and v2s(stat.source) or "nil"
+            )
+            table.insert(allScripts, scriptInfo)
+        end
+        
+        -- Сортируем по количеству вызовов
+        table.sort(allScripts, function(a, b)
+            local countA = tonumber(a:match("called (%d+) times")) or 0
+            local countB = tonumber(b:match("called (%d+) times")) or 0
+            return countA > countB
+        end)
+        
+        -- Статистика
+        local totalCalls = 0
+        for _, stat in pairs(remoteStats) do
+            totalCalls = totalCalls + stat.count
+        end
+        
+        local header = string.format("=== Remote Calling Scripts ===\n")
+        header = header .. string.format("Unique remotes: %d | Total calls: %d\n\n", #allScripts, totalCalls)
+        local combinedScripts = header .. table.concat(allScripts, "\n---\n")
+        
+        if #allScripts > 0 then
+            setclipboard(combinedScripts)
+            TextLabel.Text = string.format("Copied %d unique remotes!", #allScripts)
         else
-            TextLabel.Text = "No remotes found!"
+            TextLabel.Text = "No scripts found!"
         end
     end
 )
