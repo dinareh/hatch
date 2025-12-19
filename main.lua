@@ -2057,11 +2057,11 @@ newButton("Run Code",
     end
 )
 
---- Gets the calling script for ALL logged remotes using generation table
+--- Gets the calling script for ALL logged remotes with GetChildren indexes
 newButton(
     "Get Script",
     function() 
-        return "Click to copy calling scripts using cached paths" 
+        return "Click to copy all unique remote scripts with GetChildren[] indexes" 
     end,
     function()
         local remoteStats = {}
@@ -2069,13 +2069,6 @@ newButton(
         
         for _, log in ipairs(logs) do
             if log and log.Remote then
-                if not log.Source then
-                    local func = log.Function
-                    if func and typeof(func) ~= 'string' then
-                        log.Source = rawget(getfenv(func), "script")
-                    end
-                end
-                
                 -- Используем DebugId как уникальный ключ
                 local remoteId = OldDebugId(log.Remote)
                 
@@ -2085,7 +2078,8 @@ newButton(
                         remote = log.Remote,
                         source = log.Source,
                         count = 1,
-                        class = log.Remote.ClassName
+                        class = log.Remote.ClassName,
+                        debugId = remoteId
                     }
                 else
                     remoteStats[remoteId].count = remoteStats[remoteId].count + 1
@@ -2093,29 +2087,47 @@ newButton(
             end
         end
         
-        -- Функция для получения пути с учетом generation таблицы
-        local function getGeneratedRemotePath(remote)
-            local debugId = OldDebugId(remote)
-            
-            -- Проверяем, есть ли путь в generation таблице
-            if generation[debugId] then
-                return generation[debugId]
+        -- Функция для получения пути с GetChildren[]
+        local function getRemotePathWithIndex(remote)
+            local parent = remote.Parent
+            if not parent then
+                return 'nil'
             end
             
-            -- Если нет, используем стандартный путь
-            local path = i2p(remote)
-            if path and path ~= "nil" then
-                generation[debugId] = path
-                return path
+            -- Получаем путь к родителю
+            local parentPath
+            if parent == game then
+                parentPath = "game"
+            else
+                -- Получаем путь к родителю через i2p
+                parentPath = i2p(parent)
+                if parentPath == "nil" then
+                    parentPath = v2s(parent)
+                end
             end
             
-            -- Альтернативный метод
-            return v2s(remote)
+            -- Находим индекс ремоута среди детей родителя
+            local children = parent:GetChildren()
+            local foundIndex = nil
+            
+            for i, child in ipairs(children) do
+                if child == remote then
+                    foundIndex = i
+                    break
+                end
+            end
+            
+            if foundIndex then
+                return string.format("%s:GetChildren()[%d]", parentPath, foundIndex)
+            else
+                -- Если не нашли, используем WaitForChild с именем
+                return string.format('%s:WaitForChild("%s")', parentPath, remote.Name)
+            end
         end
         
-        -- Формируем вывод
+        -- Обрабатываем каждый ремоут
         for id, stat in pairs(remoteStats) do
-            local remotePath = getGeneratedRemotePath(stat.remote)
+            local remotePath = getRemotePathWithIndex(stat.remote)
             
             local scriptInfo = string.format("[%s] %s (called %d times) -> %s",
                 stat.class,
@@ -2126,7 +2138,7 @@ newButton(
             table.insert(allScripts, scriptInfo)
         end
         
-        -- Сортируем
+        -- Сортируем по количеству вызовов
         table.sort(allScripts, function(a, b)
             local countA = tonumber(a:match("called (%d+) times")) or 0
             local countB = tonumber(b:match("called (%d+) times")) or 0
@@ -2140,7 +2152,7 @@ newButton(
         end
         
         local header = string.format("=== Remote Calling Scripts ===\n")
-        header = header .. string.format("Unique: %d | Total calls: %d\n\n", #allScripts, totalCalls)
+        header = header .. string.format("Unique remotes: %d | Total calls: %d\n\n", #allScripts, totalCalls)
         local combinedScripts = header .. table.concat(allScripts, "\n---\n")
         
         if #allScripts > 0 then
