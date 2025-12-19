@@ -2057,11 +2057,11 @@ newButton("Run Code",
     end
 )
 
---- Gets the calling script for ALL logged remotes with detailed info
+--- Gets the calling script for ALL logged remotes (compact format)
 newButton(
     "Get Script",
     function() 
-        return "Click to copy detailed remote info with call counts" 
+        return "Click to copy remote paths with call counts" 
     end,
     function()
         local remoteStats = {}
@@ -2076,61 +2076,40 @@ newButton(
                     end
                 end
                 
-                -- Используем полный путь как ключ для уникальности
                 local remoteFullPath = log.Remote:GetFullName()
+                local remoteKey = log.Remote.ClassName .. "|" .. remoteFullPath
                 
-                if not remoteStats[remoteFullPath] then
-                    remoteStats[remoteFullPath] = {
-                        name = log.Name,
-                        remote = log.Remote,
-                        remoteClass = log.Remote.ClassName,
+                if not remoteStats[remoteKey] then
+                    remoteStats[remoteKey] = {
+                        remotePath = v2s(log.Remote), -- Используем v2s для правильного пути
                         source = log.Source,
-                        count = 1,
-                        debugId = OldDebugId(log.Remote)
+                        count = 1
                     }
                 else
-                    remoteStats[remoteFullPath].count = remoteStats[remoteFullPath].count + 1
+                    remoteStats[remoteKey].count = remoteStats[remoteKey].count + 1
                 end
             end
         end
         
-        -- Преобразуем в массив
-        for path, stat in pairs(remoteStats) do
-            -- Получаем правильный путь к ремоуту через v2s
-            local remotePathStr = v2s(stat.remote)
-            
-            -- Форматируем вывод
-            local scriptInfo = string.format("[%s] %s\nID: %s\nCalled: %d times\nFrom: %s",
-                stat.remoteClass,
-                remotePathStr,
-                stat.debugId,
+        -- Собираем результаты
+        for _, stat in pairs(remoteStats) do
+            local line = string.format("%s (called %d times) -> %s",
+                stat.remotePath,
                 stat.count,
                 stat.source and v2s(stat.source) or "nil"
             )
-            
-            table.insert(allScripts, scriptInfo)
+            table.insert(allScripts, line)
         end
         
         -- Сортируем по количеству вызовов
         table.sort(allScripts, function(a, b)
-            local countA = tonumber(a:match("Called: (%d+) times")) or 0
-            local countB = tonumber(b:match("Called: (%d+) times")) or 0
+            local countA = tonumber(a:match("called (%d+) times")) or 0
+            local countB = tonumber(b:match("called (%d+) times")) or 0
             return countA > countB
         end)
         
-        -- Статистика
-        local totalCalls = 0
-        for _, stat in pairs(remoteStats) do
-            totalCalls = totalCalls + stat.count
-        end
-        
-        local header = string.format("=== Remote Calling Scripts ===\n")
-        header = header .. string.format("Total unique remotes: %d\n", #allScripts)
-        header = header .. string.format("Total calls recorded: %d\n\n", totalCalls)
-        
-        local combinedScripts = header .. table.concat(allScripts, "\n\n---\n\n")
-        
         if #allScripts > 0 then
+            local combinedScripts = table.concat(allScripts, "\n")
             setclipboard(combinedScripts)
             TextLabel.Text = string.format("Copied %d unique remotes!", #allScripts)
         else
@@ -2138,6 +2117,9 @@ newButton(
         end
     end
 )
+
+
+        
 --- Decompiles the script that fired the remote and puts it in the code box
 newButton("Function Info",function() return "Click to view calling function information" end,
 function()
