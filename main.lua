@@ -2057,27 +2057,28 @@ newButton("Run Code",
     end
 )
 
---- Gets the calling script for ALL logged remotes with counts and GetChildren path
+--- Gets the calling script for ALL logged remotes with GetChildren path
 newButton(
     "Get Script",
     function() 
-        return "Click to copy calling scripts with call counts\nShows only unique remotes with how many times they were called" 
+        return "Click to copy calling scripts with GetChildren[] paths" 
     end,
     function()
-        -- Таблица для подсчета вызовов и отслеживания source
         local remoteStats = {}
         local allScripts = {}
         
-        -- Функция для получения пути с GetChildren
-        local function getRemotePathWithChildren(remote)
+        -- Функция для получения оптимального пути
+        local function getOptimalRemotePath(remote)
             local parent = remote.Parent
             if not parent then
-                return 'nil'
+                return v2s(remote)
             end
             
-            -- Получаем индекс через GetChildren
+            -- Получаем всех детей родителя
             local children = parent:GetChildren()
             local index = nil
+            
+            -- Ищем индекс нашего ремоута
             for i, child in ipairs(children) do
                 if child == remote then
                     index = i
@@ -2086,53 +2087,52 @@ newButton(
             end
             
             if index then
-                -- Получаем путь к родителю через v2s
-                local parentPath = v2s(parent)
-                -- Удаляем возможные WaitForChild и т.д. из конца
-                parentPath = parentPath:gsub(":WaitForChild%([^%)]+%)$", "")
-                parentPath = parentPath:gsub(":FindFirstChild%([^%)]+%)$", "")
-                
-                return string.format("%s:GetChildren()[%d]", parentPath, index)
-            else
-                -- Если не нашли индекс, используем обычный путь
-                return v2s(remote)
+                -- Проверяем, имеет ли remote нормальное имя
+                if remote.Name:match("^[%a_]+[%w_]*$") and remote.Name ~= "" then
+                    -- Если имя нормальное, используем WaitForChild
+                    return v2s(remote)
+                else
+                    -- Если имя странное или числовое, используем GetChildren
+                    local parentPath = v2s(parent)
+                    -- Очищаем путь родителя от конечных WaitForChild
+                    parentPath = parentPath:gsub(":WaitForChild%([^%)]+%)$", "")
+                    parentPath = parentPath:gsub(":FindFirstChild%([^%)]+%)$", "")
+                    
+                    return string.format("%s:GetChildren()[%d]", parentPath, index)
+                end
             end
+            
+            return v2s(remote)
         end
         
         for _, log in ipairs(logs) do
             if log and log.Remote then
                 if not log.Source then
-                    -- Попытаться получить source, если он еще не сохранен
                     local func = log.Function
                     if func and typeof(func) ~= 'string' then
                         log.Source = rawget(getfenv(func), "script")
                     end
                 end
                 
-                -- Используем полный путь как ключ для уникальности
                 local remoteFullPath = log.Remote:GetFullName()
-                local remoteClass = log.Remote.ClassName
                 
                 if not remoteStats[remoteFullPath] then
-                    -- Первое появление этого ремоута
                     remoteStats[remoteFullPath] = {
                         name = log.Name,
                         remote = log.Remote,
                         source = log.Source,
                         count = 1,
-                        class = remoteClass
+                        class = log.Remote.ClassName
                     }
                 else
-                    -- Увеличиваем счетчик вызовов
                     remoteStats[remoteFullPath].count = remoteStats[remoteFullPath].count + 1
                 end
             end
         end
         
-        -- Преобразуем в массив и сортируем
+        -- Обрабатываем и форматируем
         for _, stat in pairs(remoteStats) do
-            -- Получаем путь с GetChildren
-            local remotePath = getRemotePathWithChildren(stat.remote)
+            local remotePath = getOptimalRemotePath(stat.remote)
             
             local scriptInfo = string.format("[%s] %s (called %d times) -> %s",
                 stat.class,
@@ -2143,30 +2143,28 @@ newButton(
             table.insert(allScripts, scriptInfo)
         end
         
-        -- Сортируем по количеству вызовов (от большего к меньшему)
+        -- Сортируем
         table.sort(allScripts, function(a, b)
             local countA = tonumber(a:match("called (%d+) times")) or 0
             local countB = tonumber(b:match("called (%d+) times")) or 0
             return countA > countB
         end)
         
-        -- Добавляем заголовок с общей статистикой
+        -- Статистика
         local totalCalls = 0
         for _, stat in pairs(remoteStats) do
             totalCalls = totalCalls + stat.count
         end
         
-        local header = string.format("=== Remote Calling Scripts ===\n")
-        header = header .. string.format("Unique remotes: %d | Total calls: %d\n\n", #allScripts, totalCalls)
-        
+        local header = string.format("Remote Calling Scripts - %d unique, %d total calls\n\n", 
+            #allScripts, totalCalls)
         local combinedScripts = header .. table.concat(allScripts, "\n---\n")
         
         if #allScripts > 0 then
             setclipboard(combinedScripts)
-            TextLabel.Text = string.format("Copied %d unique remotes (%d total calls)!", 
-                #allScripts, totalCalls)
+            TextLabel.Text = string.format("Copied %d remotes!", #allScripts)
         else
-            TextLabel.Text = "No scripts found!"
+            TextLabel.Text = "No remotes found!"
         end
     end
 )
