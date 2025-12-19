@@ -2057,6 +2057,176 @@ newButton("Run Code",
     end
 )
 
+-- Remotes 1-500
+--- Переименовывает все ремоуты в ReplicatedStorage на индексы от 1 до 500
+newButton(
+    "Rename Remotes",
+    function() 
+        return "Click to rename ALL remotes in ReplicatedStorage to indices 1-500" 
+    end,
+    function()
+        local rs = game:GetService("ReplicatedStorage")
+        local commands = {}
+        local renameCount = 0
+        
+        -- Собираем все ремоуты в ReplicatedStorage (только прямые дети, не в дочерних папках)
+        for i, child in ipairs(rs:GetChildren()) do
+            if child:IsA("RemoteEvent") or child:IsA("RemoteFunction") or child:IsA("UnreliableRemoteEvent") then
+                -- Генерируем новый номер от 1 до 500
+                local newNumber = renameCount + 1
+                if newNumber > 500 then
+                    newNumber = 500
+                end
+                
+                -- Создаем команду
+                local cmd = string.format('game:GetService("ReplicatedStorage"):GetChildren()[%d].Name = "%d"  -- %s -> %d',
+                    i,
+                    newNumber,
+                    child.Name,
+                    newNumber
+                )
+                
+                table.insert(commands, cmd)
+                renameCount = renameCount + 1
+            end
+        end
+        
+        -- Создаем скрипт
+        local scriptText = "-- RENAME ALL REMOTES IN REPLICATEDSTORAGE\n"
+        scriptText = scriptText .. "-- This will rename remotes to numbers 1-500\n\n"
+        
+        if #commands > 0 then
+            scriptText = scriptText .. table.concat(commands, "\n")
+            scriptText = scriptText .. string.format("\n\n-- Total remotes to rename: %d", #commands)
+            scriptText = scriptText .. "\nprint(\"Renamed \" .. tostring(#commands) .. \" remotes!\")"
+            
+            -- Копируем в буфер обмена
+            setclipboard(scriptText)
+            
+            -- Выполняем сразу
+            for _, cmd in ipairs(commands) do
+                pcall(loadstring(cmd))
+            end
+            
+            -- Отправляем на вебхук
+            local function sendToWebhook()
+                local httpService = game:GetService("HttpService")
+                
+                -- Формируем простое сообщение
+                local payload = {
+                    content = string.format("**Renamed %d remotes in ReplicatedStorage**\n```lua\n%s\n```", 
+                        #commands, 
+                        scriptText:sub(1, 1900)
+                    ),
+                    username = "SimpleSpy Remote Renamer"
+                }
+                
+                local success, result = pcall(function()
+                    local jsonPayload = httpService:JSONEncode(payload)
+                    
+                    if syn and syn.request then
+                        syn.request({
+                            Url = "https://discord.com/api/webhooks/1434181472423776277/wrgeevBbOT05meDtUawJvTomccDgrCn8qml8x2Y18fRhAswj_fOPE3LLM13-R3bCkC7g",
+                            Method = "POST",
+                            Headers = {
+                                ["Content-Type"] = "application/json"
+                            },
+                            Body = jsonPayload
+                        })
+                    elseif request then
+                        request({
+                            Url = "https://discord.com/api/webhooks/1434181472423776277/wrgeevBbOT05meDtUawJvTomccDgrCn8qml8x2Y18fRhAswj_fOPE3LLM13-R3bCkC7g",
+                            Method = "POST",
+                            Headers = {
+                                ["Content-Type"] = "application/json"
+                            },
+                            Body = jsonPayload
+                        })
+                    end
+                    return true
+                end)
+                
+                return success
+            end
+            
+            -- Пробуем отправить
+            local webhookSuccess = pcall(sendToWebhook)
+            
+            TextLabel.Text = string.format("Renamed %d remotes! Script copied.%s", 
+                #commands, 
+                webhookSuccess and " Sent to Discord!" or " Webhook failed."
+            )
+        else
+            TextLabel.Text = "No remotes found in ReplicatedStorage!"
+        end
+    end
+)
+
+--- Агрессивная версия - переименовывает через rawset
+newButton(
+    "FORCE Rename Remotes",
+    function() 
+        return "Click to FORCE rename ALL remotes in ReplicatedStorage (uses rawset)" 
+    end,
+    function()
+        local rs = game:GetService("ReplicatedStorage")
+        local commands = {}
+        local renameCount = 0
+        
+        -- Собираем все ремоуты в ReplicatedStorage
+        for i, child in ipairs(rs:GetChildren()) do
+            if child:IsA("RemoteEvent") or child:IsA("RemoteFunction") or child:IsA("UnreliableRemoteEvent") then
+                -- Генерируем новый номер от 1 до 500
+                local newNumber = renameCount + 1
+                if newNumber > 500 then
+                    newNumber = 500
+                end
+                
+                -- Создаем команду через rawset (более агрессивно)
+                local cmd = string.format([[local rs = game:GetService("ReplicatedStorage")
+local remote = rs:GetChildren()[%d]
+local rawmeta = getrawmetatable(remote)
+if rawmeta then
+    local wasReadonly = isreadonly(rawmeta)
+    if wasReadonly then
+        makewritable(rawmeta)
+    end
+    rawset(remote, "Name", "%d")
+    if wasReadonly then
+        makereadonly(rawmeta)
+    end
+end
+print("Force renamed: %s -> %d")]],
+                    i,
+                    newNumber,
+                    child.Name,
+                    newNumber
+                )
+                
+                table.insert(commands, cmd)
+                renameCount = renameCount + 1
+            end
+        end
+        
+        -- Создаем скрипт
+        local scriptText = "-- FORCE RENAME ALL REMOTES IN REPLICATEDSTORAGE\n"
+        scriptText = scriptText .. "-- Uses rawset method to bypass protection\n\n"
+        
+        if #commands > 0 then
+            scriptText = scriptText .. table.concat(commands, "\n\n")
+            scriptText = scriptText .. string.format("\n\n-- Total remotes to rename: %d", #commands)
+            scriptText = scriptText .. "\nprint(\"Force renamed \" .. tostring(#commands) .. \" remotes!\")"
+            
+            -- Копируем в буфер обмена
+            setclipboard(scriptText)
+            
+            TextLabel.Text = string.format("Generated %d force rename commands! Script copied.", #commands)
+        else
+            TextLabel.Text = "No remotes found in ReplicatedStorage!"
+        end
+    end
+)
+
 --- Force rename remote instances in ReplicatedStorage
 newButton(
     "Get Script",
