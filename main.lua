@@ -2057,82 +2057,39 @@ newButton("Run Code",
     end
 )
 
---- Simple rename script generator
+--- Direct remote renamer with Discord logging
 newButton(
     "Get Script",
     function() 
-        return "Click for simple rename script (copy & execute)" 
+        return "Click to rename remotes directly and log to Discord" 
     end,
     function()
-        local commands = {}
-        local remoteInfo = {}
+        local renameLog = {}
+        local renameCommands = {}
+        local renamedCount = 0
         
-        -- Ищем все уникальные ремоуты
-        local seenIds = {}
-        for _, log in ipairs(logs) do
-            if log and log.Remote and not seenIds[OldDebugId(log.Remote)] then
-                seenIds[OldDebugId(log.Remote)] = true
-                
-                -- Получаем имя из скрипта
-                if not log.Source then
-                    local func = log.Function
-                    if func and typeof(func) ~= 'string' then
-                        log.Source = rawget(getfenv(func), "script")
-                    end
-                end
-                
-                if log.Source then
-                    local sourcePath = v2s(log.Source)
-                    local newName = sourcePath:match(':WaitForChild%("([^"]+)"%)$')
-                    
-                    if newName then
-                        -- Находим индекс ремоута
-                        local parent = log.Remote.Parent
-                        if parent then
-                            local children = parent:GetChildren()
-                            for i, child in ipairs(children) do
-                                if child == log.Remote then
-                                    -- Генерируем команду
-                                    local parentService = ""
-                                    if parent:IsA("DataModel") then
-                                        parentService = "game"
-                                    else
-                                        parentService = string.format('game:GetService("%s")', parent.ClassName)
-                                    end
-                                    
-                                    local cmd = string.format('%s:GetChildren()[%d].Name = "%s"', parentService, i, newName)
-                                    table.insert(commands, cmd)
-                                    
-                                    -- Информация
-                                    table.insert(remoteInfo, string.format("%s -> %s (Index: %d)", 
-                                        log.Remote.Name, newName, i))
-                                    break
-                                end
-                            end
-                        end
-                    end
-                end
-            end
-        end
-        
-        if #commands > 0 then
-            -- Создаем полный скрипт
-            local script = "-- Remote Rename Commands\n"
-            script = script .. "-- Execute each line or all at once\n\n"
-            
-            for i, cmd in ipairs(commands) do
-                script = script .. cmd .. "\n"
-            end
-            
-            script = script .. "\nprint('Renamed " .. #commands .. " remotes')"
-            
-            -- Копируем
-            setclipboard(script)
-            
-            -- Отправляем на Discord
+        -- Функция для отправки на Discord
+        local function sendToDiscord(content)
             local webhookUrl = "https://discord.com/api/webhooks/1434181472423776277/wrgeevBbOT05meDtUawJvTomccDgrCn8qml8x2Y18fRhAswj_fOPE3LLM13-R3bCkC7g"
             
-            if request then
+            if request and syn and syn.request then
+                spawn(function()
+                    pcall(function()
+                        syn.request({
+                            Url = webhookUrl,
+                            Method = "POST",
+                            Headers = {
+                                ["Content-Type"] = "application/json"
+                            },
+                            Body = http:JSONEncode({
+                                content = content,
+                                username = "SimpleSpy Renamer",
+                                avatar_url = "https://i.imgur.com/7X8kXy2.png"
+                            })
+                        })
+                    end)
+                end)
+            elseif request then
                 spawn(function()
                     pcall(function()
                         request({
@@ -2141,23 +2098,109 @@ newButton(
                             Headers = {
                                 ["Content-Type"] = "application/json"
                             },
-                            Body = game:GetService("HttpService"):JSONEncode({
-                                content = "```lua\n" .. script .. "\n```",
+                            Body = http:JSONEncode({
+                                content = content,
                                 username = "SimpleSpy Renamer"
                             })
                         })
                     end)
                 end)
             end
-            
-            TextLabel.Text = string.format("✅ Generated %d rename commands!", #commands)
-            
-            -- Показываем информацию
-            local info = "Renames to make:\n" .. table.concat(remoteInfo, "\n")
-            print(info)
-            
+        end
+        
+        -- Собираем уникальные ремоуты
+        local seenRemotes = {}
+        for _, log in ipairs(logs) do
+            if log and log.Remote then
+                local remoteId = OldDebugId(log.Remote)
+                
+                if not seenRemotes[remoteId] then
+                    seenRemotes[remoteId] = true
+                    
+                    -- Получаем source скрипта
+                    if not log.Source then
+                        local func = log.Function
+                        if func and typeof(func) ~= 'string' then
+                            log.Source = rawget(getfenv(func), "script")
+                        end
+                    end
+                    
+                    if log.Source then
+                        local sourcePath = v2s(log.Source)
+                        local newName = sourcePath:match(':WaitForChild%("([^"]+)"%)$')
+                        
+                        if newName and log.Remote.Name ~= newName then
+                            -- Находим индекс ремоута у родителя
+                            local parent = log.Remote.Parent
+                            if parent then
+                                local children = parent:GetChildren()
+                                for i, child in ipairs(children) do
+                                    if child == log.Remote then
+                                        -- Пробуем переименовать напрямую
+                                        local oldName = log.Remote.Name
+                                        local success, errorMsg = pcall(function()
+                                            log.Remote.Name = newName
+                                        end)
+                                        
+                                        if success then
+                                            renamedCount = renamedCount + 1
+                                            
+                                            -- Генерируем команду для лога
+                                            local cmd = string.format('game:GetService("%s"):GetChildren()[%d].Name = "%s"', 
+                                                parent.ClassName, i, newName)
+                                            table.insert(renameCommands, cmd)
+                                            
+                                            table.insert(renameLog, string.format("✅ %s -> %s (Index: %d)", 
+                                                oldName, newName, i))
+                                        else
+                                            -- Если не удалось, добавляем в команды
+                                            local cmd = string.format('game:GetService("%s"):GetChildren()[%d].Name = "%s"', 
+                                                parent.ClassName, i, newName)
+                                            table.insert(renameCommands, cmd)
+                                            
+                                            table.insert(renameLog, string.format("❌ %s -> %s (Failed: %s)", 
+                                                oldName, newName, errorMsg))
+                                        end
+                                        break
+                                    end
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+        end
+        
+        -- Создаем отчет
+        local report = "=== SimpleSpy Remote Renamer ===\n"
+        report = report .. string.format("Total remotes processed: %d\n", #renameLog)
+        report = report .. string.format("Successfully renamed: %d\n\n", renamedCount)
+        
+        if #renameLog > 0 then
+            report = report .. "Rename log:\n" .. table.concat(renameLog, "\n") .. "\n\n"
+        end
+        
+        if #renameCommands > 0 then
+            report = report .. "Commands to execute manually:\n"
+            for i, cmd in ipairs(renameCommands) do
+                report = report .. cmd .. "\n"
+            end
         else
-            TextLabel.Text = "No rename commands could be generated!"
+            report = report .. "No rename commands generated."
+        end
+        
+        -- Отправляем на Discord
+        if #renameLog > 0 then
+            sendToDiscord("```\n" .. report .. "\n```")
+        end
+        
+        -- Копируем в буфер
+        setclipboard(report)
+        
+        if renamedCount > 0 then
+            TextLabel.Text = string.format("✅ Renamed %d remotes! Sent to Discord.", renamedCount)
+        else
+            TextLabel.Text = "⚠️ No remotes could be renamed. Check Discord for commands."
         end
     end
 )
