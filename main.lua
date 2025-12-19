@@ -1,1 +1,366 @@
---[[ v1.0.0 https://wearedevs.net/obfuscator ]] return(function(...)local u={"\099\051\115\108\066\113\122\079\106\106\061\061";"\076\075\057\078\053\104\090\104\074\051\117\075\076\114\098\106\074\118\061\061";"\074\089\090\083\065\104\090\083\048\105\098\057\048\051\085\080";"\119\122\049\086\119\104\117\056\115\105\097\061";"\115\122\090\056\119\104\074\061","\105\117\049\112\048\106\061\061";"\115\081\119\090\065\122\055\074","\048\089\049\066\065\122\090\114\119\122\119\057\074\051\120\057\115\089\071\061","\068\072\109\090\118\104\109\116\078\072\115\043\084\102\048\061";"\118\104\085\083\115\105\120\086\048\105\098\109\119\051\090\043\074\051\102\082\053\121\061\061";"\082\080\083\108";"\115\089\117\057\119\122\078\100";"\072\055\088\074\049\080\121\068";"\048\089\057\057\074\054\061\061","\065\043\097\061";"\105\117\049\073\115\105\098\057\119\122\102\056\065\122\071\061","\065\122\090\086";"\104\112\090\086\078\117\120\112\048\051\117\099\076\068\098\052\099\075\118\061","\065\043\075\061","\065\104\102\083\053\121\061\061";"\105\117\049\109\065\051\098\080\108\121\061\061","\115\110\078\117\048\054\061\061","\048\089\049\086\048\089\102\083";"\084\056\054\080\115\111\100\109\084\054\061\061","\053\105\119\050\048\104\115\077\053\110\109\090","\084\054\061\061";"\099\051\078\090\074\122\109\085\099\110\098\105\076\068\054\082","\105\117\049\066\115\104\047\061";"\048\112\080\083\115\118\061\061";"\102\101\086\047\085\118\061\061";"\074\122\078\057\065\122\106\061";"\108\103\054\083\071\104\085\086\090\089\085\097\065\105\098\117\078\121\061\061";"\119\104\079\106\048\104\078\052";"\104\043\119\109\068\083\085\104\048\051\117\052\098\072\102\085\090\054\061\061","\065\105\102\086\090\102\119\112\098\105\057\102\118\105\102\089\078\112\097\061","\065\110\076\061";"\048\051\119\118\065\112\119\081\071\072\115\112\076\112\078\066\099\118\061\061","\115\051\119\078\076\105\069\073\118\068\057\099\115\075\073\098\108\051\054\061";"\065\082\078\105\065\051\102\111\098\089\098\089\115\089\103\083\074\054\061\061","\071\051\102\077\099\051\115\047\076\102\057\051\108\114\076\047\053\114\074\061";"\119\051\057\097\090\114\102\075\053\122\090\047\099\072\115\118\068\054\061\061","\074\051\102\086\115\122\049\073";"\105\068\084\113\119\121\061\061","\098\104\120\070\078\114\057\076\053\082\078\043\118\089\109\043\071\118\061\061","\119\051\119\109\098\080\080\085\076\122\066\079","\115\105\120\077\065\110\097\061","\074\110\098\077\053\104\079\112","\068\104\090\073\065\110\120\079\118\051\049\073\048\054\061\061";"\071\102\121\117\090\071\083\077\065\122\049\115\098\075\079\086","\053\047\053\077\069\099\082\104";"\090\122\102\073\074\122\090\077\097\075\098\080\119\122\090\114\119\122\090\103\097\118\061\061";"\118\110\120\057\074\089\057\072\048\104\117\080","\104\122\073\086\072\103\072\086\115\118\061\061","","\065\117\100\110\074\103\117\080";"\119\122\102\056\065\122\071\061","\080\112\107\090\120\049\121\061","\115\051\085\055\065\110\097\061";"\086\069\120\076\065\118\061\061";"\115\117\120\071\068\103\117\076\099\072\119\085\115\102\102\120\071\075\100\061";"\074\051\090\073\065\110\115\080";"\053\102\078\053\048\068\080\082\099\071\109\117\104\104\079\056\048\054\061\061";"\119\122\049\082\119\072\120\109\065\051\074\061","\099\077\105\079"}for m,M in ipairs({{-228964-(-228965);-646104+646168};{-472477-(-472478),-525004-(-525061)};{802724+-802666;-813295-(-813359)}})do while M[632144+-632143]<M[-4307-(-4309)]do u[M[-464962+464963]],u[M[-675064+675066]],M[-944067+944068],M[-138540-(-138542)]=u[M[-224049-(-224051)]],u[M[-74985+74986]],M[635198-635197]+(349479+-349478),M[-838570-(-838572)]-(698656-698655)end end local function m(m)return u[m+(-706925-(-743518))]end do local m=table.concat local M=string.len local x=type local w=table.insert local Z={X=933620-933560,h=-335362+335384;T=-657369+657383;K=-973797-(-973801),g=-343458-(-343494),a=-920084+920092,s=867868-867843,A=835713+-835686,r=-531757+531792,u=29429-29376;y=64376+-64376,w=709696+-709667,k=-391767+391826,["\052"]=534270-534227;D=-246103+246122;M=1023467+-1023417,b=-947943-(-947960);["\053"]=515701-515675,B=522841-522797,p=-404606+404645,e=-875285+875343;["\047"]=908711-908655;j=713420+-713372,P=-817495+817532,f=541864+-541859;["\054"]=209431-209399,t=-140018-(-140060);N=783530+-783517,F=-936829-(-936840);O=-686449-(-686506),["\055"]=942652-942605,z=-428190+428196;E=713002-713001;["\057"]=101565-101532;n=-704744+704799,v=514223+-514207;V=-153038+153084,["\056"]=488467+-488433;J=-230081+230109,L=-380314+380326,I=660462+-660417,H=900642-900635,Y=713169+-713115;Z=212819-212798;c=-422703+422721,G=-865630+865650,S=-455059+455111,d=544083+-544043;R=280584+-280533;i=659990+-659967,["\048"]=904774+-904750,o=367462-367460,Q=699307-699292,["\043"]=-456219-(-456222),l=729296-729266;["\049"]=187440-187379;q=-925641+925704;W=727065+-727034,U=118105-118056,["\050"]=845253+-845243;x=1014559-1014550,m=-866063-(-866104);C=23367-23305;["\051"]=-151680-(-151718)}local S=string.sub local B=math.floor local F=string.char local j=u for u=-409746+409747,#j,-889692+889693 do local q=j[u]if x(q)=="\115\116\114\105\110\103"then local x=M(q)local Q={}local T=-279749+279750 local e=-30227+30227 local s=365535+-365535 while T<=x do local u=S(q,T,T)local m=Z[u]if m then e=e+m*(-31366+31430)^((195580-195577)-s)s=s+(-190890+190891)if s==-98925+98929 then s=484458-484458 local u=B(e/(-398940-(-464476)))local m=B((e%(557876-492340))/(-360663+360919))local M=e%(20890-20634)w(Q,F(u,m,M))e=711579+-711579 end elseif u=="\061"then w(Q,F(B(e/(712458+-646922))))if T>=x or S(q,T+(-1013709+1013710),T+(623437-623436))~="\061"then w(Q,F(B((e%(-285181-(-350717)))/(-20560+20816))))end break end T=T+(555182+-555181)end j[u]=m(Q)end end end return(function(u,x,w,Z,S,B,F,j,f,s,Y,J,Q,U,W,v,z,t,T,q,e,M)q,j,e,v,f,T,Q,M,W,J,Y,t,z,s,U={},{},function(u)for m=1035674+-1035673,#u,904121+-904120 do q[u[m]]=q[u[m]]+(-179126+179127)end if w then local M=w(true)local x=S(M)x[m(167892-204471)],x[m(-846218-(-809688))],x[m(64291+-100863)]=u,s,function()return 1678062-(-568767)end return M else return Z({},{[m(-580478+543948)]=s;[m(-851155+814576)]=u;[m(-459309-(-422737))]=function()return 1753122-(-493707)end})end end,function(u,m)local x=e(m)local w=function(w,Z,S,B,F,j,q)return M(u,{w;Z,S,B,F;j,q},m,x)end return w end,function(u,m)local x=e(m)local w=function(w,Z,S,B,F)return M(u,{w;Z;S;B;F},m,x)end return w end,227285+-227285,function()T=T+(-926441+926442)q[T]=-266993+266994 return T end,function(M,w,Z,S)local X,T,I,K,c,C,h,g,d,k,b,E,H,q,a,O,s,L,D,R,n,l,i,e,r,V,A,N,Y,P,o,y,F,G while M do if M<7449090-(-876139)then if M<4961474-487058 then if M<2179607-(-159105)then if M<110881+1095050 then if M<-710373+1489486 then if M<-333481+815917 then if M<-548155+735781 then M=true M=M and-565890+9507314 or 2685699-151511 else G=m(451264-487808)M=3856611-(-561987)L=u[G]G=m(-104672-(-68105))l=L[G]d=l end else j[T]=F M=-169847+2335674 end else if M<369426-(-743765)then if M<1354865-324270 then P=nil N=nil M=10068103-(-669652)s=nil else P=F L=m(38254-74798)N=m(-838038-(-801458))F=u[N]N=m(1000016+-1036574)A=m(-76439-(-39895))M=F[N]N=Q()j[N]=M F=u[A]A=m(930633-967210)M=F[A]g=M l=u[L]d=l A=M M=l and 566011-374786 or 5357655-939057 end else F=m(-516868+480276)M=u[F]N=2938086450325-876349 e=j[Z[474262+-474261]]s=j[Z[-706930+706932]]P=m(755945+-792480)Y=s(P,N)T=e[Y]F=M(T)M=13014358-(-956394)end end else if M<1633133-(-434032)then if M<1947847-128374 then if M<-465372+2123121 then E=not o X=X+y r=X<=R r=E and r E=X>=R E=o and E r=E or r E=13775231-(-1007584)M=r and E r=-163405+8100648 M=M or r else q=Q()M=U(-966635+11416753,{q})j[q]=M M=j[q]q=z(q)F=M()M=u[m(-582982+546423)]F={}end else k=k+b y=not R F=k<=H F=y and F y=k>=H y=R and y F=y or F y=12752347-(-523163)M=F and y F=-351780+8652410 M=M or F end else if M<2995954-815736 then if M<1171705-(-990276)then V=-73589-(-73591)h=D[V]V=j[O]n=h==V a=n M=-102365+7902931 else C=z(C)O=z(O)K=z(K)E=z(E)y=z(y)o=z(o)D=nil M=1189613-(-721681)end else j[T]=k M=j[T]M=M and 629255+15152713 or-545919+16425900 end end end else if M<145808+3076736 then if M<2748359-75528 then if M<1758579-(-818492)then if M<1763543-(-792784)then M=u[m(-1003519+966954)]F={}else q=w[-982808-(-982809)]T=w[59348-59346]M=j[Z[-969676-(-969677)]]e=M M=e[T]M=M and 9132490-(-731244)or 15913354-456870 end else Y=nil F={}M=u[m(-490741-(-454159))]s=z(s)T=z(T)end else if M<-26047+3205823 then if M<-657216+3744867 then c=-737489-(-737490)j[T]=a V=j[K]h=V+c n=D[h]I=l+n n=740763-740507 M=I%n l=M M=1570922-(-594905)h=j[E]n=L+h h=-889216+889472 I=n%h L=I else M={}q=M M=5538398-687622 end else q=nil j[Z[649862+-649857]]=F M=162451+7847429 end end else if M<1023711+2964880 then if M<63248+3399426 then if M<383294+2970408 then e=j[Z[669495+-669489]]T=e==q M=2653409-(-551603)F=T else F=j[Z[593625-593624]]s=16279562356193-(-890811)q=j[Z[715096-715094]]e=m(967397+-1003943)T=q(e,s)M=F[T]s=m(851482+-888062)A=m(280868+-317425)e=u[s]q=M F=369955-369954 Y=j[Z[29825+-29824]]P=j[Z[209019-209017]]d=682236+21099381374309 N=P(A,d)M=5480829-(-724640)s=Y[N]T=e[s]e=T T=70631-70630 s=T T=-904753+904753 Y=s<T T=F-s end else R=m(-504169-(-467584))M=u[R]R=m(-155749-(-119168))u[R]=M M=15574428-130983 end else if M<4123189-(-282559)then T=m(183339+-219930)e=3093384-400636 q=T^e F=134298+1468944 M=F-q q=M F=m(-305062+268487)M=F/q F={M}M=u[m(-438529+401978)]else M=g M=d and 6883241-1011844 or 560002+4319880 F=d end end end end else if M<7248537-200267 then if M<6565886-712953 then if M<5248042-200398 then if M<4154840-(-709411)then if M<3974466-(-822726)then l=m(373614-410184)N=m(-527983+491419)P=u[N]A=j[s]L=32852905871177-(-668793)M=143623+2525944 d=j[T]g=d(l,L)N=A[g]e=P[N]N=-919163-(-919164)P=e(N)else M=true M=M and 5721346-156528 or 10630528-(-638458)end else g=m(-939907-(-903340))d=u[g]F=d M=6304406-433009 end else if M<-732358+6368908 then if M<109434+5081812 then M=true j[Z[-665116+665117]]=M F={}M=u[m(-729257+692689)]else T=m(-132106+95562)F=u[T]P=m(-62039+25452)A=m(379685+-416221)e=j[Z[-513842-(-513843)]]s=j[Z[-848624-(-848626)]]N=378358+1456228023472 Y=s(P,N)T=e[Y]d=491662+6750929144761 s=m(789661-826214)M=F[T]e=u[s]Y=j[Z[968595-968594]]P=j[Z[-639652-(-639654)]]N=P(A,d)s=Y[N]T=e[s]A=m(-312452+275909)Y=j[Z[-768624-(-768625)]]d=-629035+13389187002757 P=j[Z[70500+-70498]]N=P(A,d)s=Y[N]Y=2043867-1043867 e={T(s,Y)}F=M(q,x(e))e=m(321394-357974)N=m(586270+-622799)T=u[e]s=j[Z[119774-119773]]A=49111+4197299800011 Y=j[Z[-277949+277951]]P=Y(N,A)e=s[P]F=T[e]e=-611701+611801 T=F(e)F=145331-145321 M=T<F M=M and-224624+1338880 or 14791766-821014 end else V=-356334-(-356335)h=D[V]I=M V=false n=h==V M=n and-528542+2607857 or 803499+6997067 a=n end end else if M<5803718-(-404830)then if M<5501301-(-639166)then if M<650608+5242419 then d=Q()l=-609761+609826 g=433623+-433620 j[d]=F M=j[N]F=M(g,l)M=562878-562878 g=Q()r=t(-688408+5089425,{})l=M M=-578999-(-578999)j[g]=F b=m(-287286+250749)G=m(-485957-(-449388))F=u[G]G={F(r)}L=M M={x(G)}F=335454-335452 G=M M=G[F]r=M F=m(90296+-126828)M=u[F]X=j[e]H=u[b]b=H(r)H=m(-671792-(-635216))k=X(b,H)X={k()}F=M(x(X))M=1348755-(-562539)X=Q()j[X]=F k=j[g]H=k F=480008-480007 k=2783-2782 b=k k=-433929+433929 R=b<k k=F-b else P=m(-576894+540325)e=u[P]d=m(295417+-331948)A=u[d]g=j[s]l=j[T]r=79215+22611791819698 G=m(-818816+782269)L=l(G,r)d=g[L]N=A[d]A=-688208+688209 P=e(N,A)M=P and 3987167-(-767156)or-454169+3123736 end else P=not Y T=T+s F=T<=e F=P and F P=T>=e P=Y and P F=P or F P=14334353-127658 M=F and P F=8051610-657655 M=M or F end else if M<-965829+7391454 then if M<599050+5639872 then M=U(7512059-(-633120),{s})H={M()}F={x(H)}M=u[m(198446-234980)]else L=nil X=z(X)e=z(e)P=nil e=nil N=z(N)s=z(s)l=nil g=z(g)r=nil d=z(d)Y=z(Y)A=nil T=z(T)N=m(-74814+38234)r=-783133-(-783134)T=nil G=nil s=Q()P=m(-454982-(-418402))j[s]=T T=Q()L=Q()j[T]=e A=m(782020-818564)Y=u[P]G={}P=m(-262437-(-225895))d=m(186719-223272)g=Q()e=Y[P]l={}Y=Q()j[Y]=e P=u[N]N=m(-945831-(-909273))X=-149692+149948 R=X e=P[N]N=u[A]A=m(-587254+550715)P=N[A]A=u[d]d=m(-504186+467600)N=A[d]M=880268-(-744416)d=Q()A=-373157+373157 j[d]=A A=680112+-680110 j[g]=A j[L]=l A={}l=411233+-411233 X=39460-39459 y=X X=-631777-(-631777)o=y<X X=r-y end else Y=521991-521989 s=-899144+899145 T=j[Z[-668661+668662]]e=T(s,Y)T=-351863+351864 q=e==T M=q and 783592+14518627 or 8462382-778147 F=q end end end else if M<-217976+8029285 then if M<475508+7026078 then if M<7394840-19559 then if M<7071557-(-136904)then M=true M=M and 894599+14314766 or 14698869-637441 else e=m(172646+-209199)M=true T=Q()N=m(-577876+541307)j[T]=M F=u[e]e=m(493115-529703)q=w M=F[e]e=Q()j[e]=M s=Q()M=J(180643+7946358,{})j[s]=M M=false Y=Q()A=f(123202+5002870,{Y})j[Y]=M P=u[N]N=P(A)M=N and 9787504-199013 or-74250+1182639 F=N end else M=u[m(909518-946058)]F={}q=nil end else if M<8277847-517324 then if M<-629379+8215153 then H=l==L k=H M=1823070-(-385365)else T=j[Z[63396+-63394]]M=-476079+15778298 e=j[Z[-320063-(-320066)]]q=T==e F=q end else F=a M=I M=-424664+1165208 end end else if M<242807+7895603 then if M<8561517-435273 then if M<8186082-229636 then X=#G M=-272155+15004191 R=-145584+145584 r=X==R else M=j[Z[631813+-631806]]M=M and-1003101+14576634 or-524784+8862985 end else q=m(-345962+309413)F=m(-877339+840785)M=u[F]F=M(q)F={}M=u[m(-926396+889836)]end else if M<8599410-314172 then M=-563294+747983 else H=j[T]M=H and 7705848-164068 or-581793+2790228 k=H end end end end end else if M<-353011+14006800 then if M<11550948-391858 then if M<-1031403+10551489 then if M<8606909-(-247649)then if M<273589+8397701 then if M<991449+7438783 then M={}q=M M=90467+16684120 T=243717-243716 e=j[Z[783361-783352]]s=e e=992216+-992215 Y=e e=-1019111-(-1019111)P=Y<e e=T-Y else q=j[Z[1028654+-1028653]]F=#q q=563170+-563170 M=F==q M=M and 648420+12415778 or 13494525-(-25515)end else P=-654198-(-654200)e=Y==P M=e and 10620158-424010 or-601253+10044690 end else if M<485702+8954325 then if M<9848121-504580 then F=m(141865+-178450)M=u[F]q=m(936341+-972922)F=u[q]q=m(-907898+871317)u[q]=M q=m(651129-687714)u[q]=F q=j[Z[513667+-513666]]T=q()M=-927074+1111763 else s=m(152512-189049)F=m(40902-77434)A=m(-942885-(-906316))M=u[F]q=j[Z[-185164+185168]]e=u[s]d=f(-710080+14363673,{})N=u[A]A={N(d)}P={x(A)}N=-635126+635128 Y=P[N]s=e(Y)e=m(18468-55044)T=q(s,e)q={T()}F=M(x(q))q=F T=j[Z[-424646+424651]]M=T and 2770430-(-498709)or-677960+3882972 F=T end else M=522372+5388462 P=m(185693+-222245)e=u[P]P=e()end end else if M<11043483-817176 then if M<123915+9864703 then if M<10586266-791721 then M=1591683-483294 P=j[Y]F=P else M=11616685-878930 end else P=m(-342426+305836)M=5430199-(-480635)e=u[P]P=e()end else if M<1008520+10021024 then if M<10608784-(-82553)then M=j[Z[-882021+882022]]F=M()M=j[Z[-72503+72504]]F=M()M=u[m(152031-188594)]F={}else M=u[m(-333779-(-297213))]F={T}end else M=-702620+12198966 T=j[Z[389913-389910]]e=456112-456059 q=T*e T=940219+-939962 F=q%T j[Z[-160458+160461]]=F end end end else if M<13898915-600070 then if M<717640+11136661 then if M<327782+11166830 then if M<1010772+10285160 then F={}q=nil M=u[m(-916067-(-879505))]else I=j[T]a=I M=I and 16203419-486906 or 776827+2257304 end else T=j[Z[32914+-32911]]e=598091-598090 q=T~=e M=q and 14305404-572986 or 128433+10973976 end else if M<12445986-(-658927)then if M<13540073-801747 then g=g+l G=not L A=g<=d A=G and A G=g>=d G=L and G A=G or A G=-959544+14421626 M=A and G A=621048-(-402712)M=M or A else T=j[Z[251222-251220]]e=228164-228023 q=T*e T=-7799+30653439350328 F=q+T q=-160241+35184372249073 T=-711690-(-711691)M=F%q j[Z[-68856+68858]]=M M=10100921-(-1001488)q=j[Z[306236+-306233]]F=q~=T end else c=708327-708327 y=Q()E=178314+-178214 n=m(833035+-869572)K=-350335+350590 D=239093+-239091 o=m(-944817+908237)j[y]=k F=u[o]o=m(-131713+95155)M=F[o]o=522245+-522244 F=M(o,E)E=-750046-(-750046)o=Q()j[o]=F M=j[N]O=-1032382+1032383 F=M(E,K)K=-571960-(-571961)E=Q()j[E]=F M=j[N]C=j[o]F=M(K,C)K=Q()j[K]=F F=j[N]C=F(O,D)F=841645-841644 M=C==F C=Q()j[C]=M I=u[n]D=m(-233814+197240)F=m(-218928+182352)h=j[N]i=812897-802897 V={h(c,i)}M=m(-801114-(-764536))n=I(x(V))M=r[M]I=m(120138+-156712)a=n..I O=D..a M=M(r,F,O)O=Q()D=m(518602-555171)j[O]=M a=W(-879957+7788019,{N,y,g;e,T,X,C,O,o;K;E;d})F=u[D]D={F(a)}M={x(D)}D=M M=j[C]M=M and 14890977-(-134863)or-346655+11707843 end end else if M<14206251-655664 then if M<-636420+14104775 then if M<13998849-562116 then M=true M=M and 14611273-449717 or-86010+6322524 else b=m(150334+-186887)A=g H=u[b]b=m(-67533+30962)M=11894503-(-467937)k=H[b]H=k(q,A)A=nil k=j[Z[-117865-(-117871)]]b=k()X=H+b r=X+P X=881294-881038 G=r%X X=e[T]b=-300235-(-300236)P=G H=P+b k=s[H]r=X..k e[T]=r end else e=m(549593-586137)T=u[e]M=u[m(599324+-635862)]e=m(197151-233690)q=T[e]e=j[Z[451197-451196]]T={q(e)}F={x(T)}end else if M<12674307-(-923175)then q=m(712631+-749185)M=u[q]T=j[Z[-294293-(-294301)]]e=722998-722998 q=M(T,e)M=-872461+9210662 else e=839249+11115593 F=-1001993+15820418 T=m(275466-312011)q=T^e M=F-q F=m(-290407-(-253852))q=M M=F/q F={M}M=u[m(-1045292+1008731)]end end end end else if M<24018+15029573 then if M<-593157+14942908 then if M<549284+13508949 then if M<13746753-(-226989)then if M<14798938-970903 then e=-757366-(-757398)T=j[Z[-371324-(-371327)]]q=T%e M=13702948-182908 l=975324+-975311 d=-557319-(-557321)s=j[Z[-839508-(-839512)]]N=j[Z[-229973+229975]]r=j[Z[51778+-51775]]G=r-q r=268565-268533 L=G/r g=l-L A=d^g P=N/A l=72618+-72362 Y=s(P)s=4294318190-(-649106)e=Y%s Y=564239+-564237 A=-419065+419066 s=Y^q T=e/s d=-694037-(-694293)s=j[Z[937156+-937152]]N=T%A A=4295124284-156988 P=N*A Y=s(P)s=j[Z[-641063-(-641067)]]P=s(T)e=Y+P Y=274852+-209316 N=-174830-(-240366)s=e%Y T=nil P=e-s Y=P/N N=704939-704683 P=s%N A=s-P N=A/d q=nil e=nil d=711943-711687 A=Y%d g=Y-A d=g/l Y=nil s=nil g={P,N;A;d}P=nil j[Z[-481340+481341]]=g d=nil A=nil N=nil else M=-491318+5342094 end else P=m(-424867-(-388319))M=5840080-(-70754)e=u[P]P=e()end else if M<15092424-888056 then if M<14308300-205284 then M=u[m(205252+-241808)]F={}else M=7724430-537828 end else A=m(-390857+354304)P=T N=u[A]L=m(-954747+918158)d=j[Z[-217268+217269]]g=j[Z[-738269+738271]]G=51464242702-(-113161)l=g(L,G)G=426353+21349050803556 A=d[l]L=m(383272-419813)F=N[A]P=nil d=j[Z[843449-843448]]g=j[Z[1034055-1034053]]l=g(L,G)A=d[l]d=-810441-(-910441)N=F(A,d)M=q..N q=M M=3489+6201980 end end else if M<-509834+15302900 then if M<14295534-(-484789)then if M<14345473-(-303368)then M=j[Z[-457830-(-457840)]]T=j[Z[903254-903243]]q[M]=T M=j[Z[-1033010-(-1033022)]]T={M(q)}F={x(T)}M=u[m(-175978+139405)]else R=#G X=-734343+734344 r=e(X,R)E=-159698+159699 X=P(G,r)R=j[L]M=15145112-328373 o=X-E y=N(o)R[X]=y X=nil r=nil end else M=2102717-478033 r=X E=r G[r]=E r=nil end else if M<-1046532+16036948 then X=#G R=-862193-(-862193)r=X==R M=r and 15454321-(-387529)or 15236233-504197 else a=j[T]M=a and 4803191-(-878621)or 1299113-558569 F=a end end end else if M<15142768-(-472477)then if M<15085942-(-302581)then if M<15499264-226731 then if M<591172+14535241 then d=-847475-(-847730)A=1026582-1026582 M=j[Z[995694+-995693]]T=e N=M(A,d)q[T]=N M=-254974+17029561 T=nil else R=22463+-22457 b=-986464+986465 M=j[N]H=M(b,R)R=m(-1036354-(-999769))M=m(667846+-704431)u[M]=H b=u[R]R=-196976-(-196978)M=b>R M=M and 725665+14751574 or 477845+3315510 end else M=F and 225597+9191131 or 344743+7665137 end else if M<15752197-286225 then if M<15668193-214329 then M=7475985-289383 else M={}N=996472-996217 A=m(38346-74899)Y=732320+35184371356512 j[Z[599464-599462]]=M F=j[Z[372996-372993]]s=F M=11445887-(-916553)F=T%Y j[Z[-805638-(-805642)]]=F P=T%N g=675877-675876 N=453834-453832 Y=P+N j[Z[-634624-(-634629)]]=Y N=u[A]l=g A=m(-1012865+976282)P=N[A]N=P(q)g=904583+-904583 L=l<g P=m(-807605-(-771059))e[T]=P P=660803-660761 d=N A=987770-987769 g=A-l end else b=m(142773-179310)M=u[b]y=m(-422803-(-386222))R=u[y]b=M(R)M=m(-409879-(-373294))u[M]=b M=-285566+15729011 end end else if M<14955668-(-917632)then if M<15007193-(-787096)then if M<14800482-(-955254)then n=467337-467336 I=D[n]M=91033+2943098 a=I else M=-783516+7022659 end else X=Q()o=m(466300+-502833)R=t(-953125+9399635,{X;d;g,Y})N=nil y=Q()r={}j[X]=r n=nil Y=z(Y)r=Q()E={}l=nil C=m(960490+-997069)A=nil j[r]=R R={}D=m(822740-859324)e=nil G=nil j[y]=R R=u[o]l=29866055669684-(-106143)O=j[y]K={[C]=O,[D]=n}Y=m(634958-671506)o=R(E,K)P=nil e=t(-165702+3303708,{s,T})R=v(3469680-900207,{y;X,L,d,g,r})d=z(d)P=m(848425+-885005)g=z(g)j[s]=o r=z(r)L=z(L)X=z(X)y=z(y)j[T]=R u[Y]=e e=U(329051+1366247,{})Y=m(-1024861+988271)u[Y]=e g=m(-559227+522677)Y=m(281444-317996)e=W(3451674-97164,{s;T})u[Y]=e Y=u[P]N=j[s]A=j[T]d=A(g,l)P=N[d]e=Y[P]P=-456645-(-456648)Y=e(P)P=-450336-(-450337)e=Y==P M=e and 283009+13707546 or 513893+8195364 end else if M<16631016-157558 then M=true M=464858+5771656 else N=not P e=e+Y T=e<=s T=N and T N=e>=s N=P and N T=N or T N=252642+14806149 M=T and N T=14213550-(-178069)M=M or T end end end end end end end M=#S return x(F)end,function(u,m)local x=e(m)local w=function(w)return M(u,{w},m,x)end return w end,function(u,m)local x=e(m)local w=function(w,Z,S,B)return M(u,{w;Z,S;B},m,x)end return w end,function(u,m)local x=e(m)local w=function(...)return M(u,{...},m,x)end return w end,function(u,m)local x=e(m)local w=function()return M(u,{},m,x)end return w end,function(u)q[u]=q[u]-(489224-489223)if-156608-(-156608)==q[u]then q[u],j[u]=nil,nil end end,function(u)local m,M=-796147+796148,u[585308-585307]while M do q[M],m=q[M]-(-718669-(-718670)),(-661778-(-661779))+m if q[M]==-984409+984409 then q[M],j[M]=nil,nil end M=u[m]end end,function(u,m)local x=e(m)local w=function(w,Z)return M(u,{w;Z},m,x)end return w end return(Y(8269406-945638,{}))(x(F))end)(getfenv and getfenv()or _ENV,unpack or table[m(424556+-461123)],newproxy,setmetatable,getmetatable,select,{...})end)(...)
+-- Remote Renamer для SimpleSpy
+-- Переименовывает RemoteEvent и RemoteFunction в их Calling Script
+
+-- Добавляем кнопку в SimpleSpy
+local function addRemoteRenamerButton()
+    SimpleSpy:newButton(
+        "Rename Remotes",
+        function() return "Переименовать все RemoteEvent/RemoteFunction в их Calling Script" end,
+        function()
+            renameAllRemotesFromLogs()
+        end
+    )
+end
+
+-- Основная функция переименования на основе логов SimpleSpy
+local function renameAllRemotesFromLogs()
+    TextLabel.Text = "Начинаю переименование..."
+    
+    local renamedCount = 0
+    local failedCount = 0
+    
+    -- Используем логи SimpleSpy для получения информации о calling script
+    for _, log in pairs(logs) do
+        if log and log.Remote and (log.Remote:IsA("RemoteEvent") or log.Remote:IsA("RemoteFunction")) then
+            local remote = log.Remote
+            local callingScript = log.Source
+            
+            if callingScript and typeof(callingScript) == "Instance" then
+                -- Получаем имя скрипта
+                local scriptName = callingScript.Name
+                
+                -- Создаем новое имя для remote
+                local newName = scriptName .. "_" .. remote.ClassName
+                
+                -- Переименовываем remote
+                pcall(function()
+                    local oldName = remote.Name
+                    remote.Name = newName
+                    
+                    print(string.format("[RemoteRenamer] ✓ %s.%s -> %s", 
+                        remote.ClassName, oldName, newName))
+                    
+                    renamedCount = renamedCount + 1
+                end)
+            else
+                failedCount = failedCount + 1
+                print(string.format("[RemoteRenamer] ! Не удалось получить calling script для %s", 
+                    remote:GetFullName()))
+            end
+        end
+    end
+    
+    -- Также ищем ремоуты, которые не были в логах
+    local function findAndRenameRemainingRemotes()
+        local containers = {
+            game:GetService("ReplicatedStorage"),
+            game:GetService("ServerStorage"),
+            game:GetService("StarterPlayer"):WaitForChild("StarterPlayerScripts"),
+            game:GetService("StarterPlayer"):WaitForChild("StarterCharacterScripts"),
+            Players.LocalPlayer:WaitForChild("PlayerScripts"),
+            game:GetService("StarterGui"),
+            game:GetService("Workspace")
+        }
+        
+        for _, container in pairs(containers) do
+            pcall(function()
+                for _, remote in pairs(container:GetDescendants()) do
+                    if (remote:IsA("RemoteEvent") or remote:IsA("RemoteFunction")) then
+                        local alreadyRenamed = false
+                        
+                        -- Проверяем, не переименовывали ли мы уже этот remote
+                        for _, log in pairs(logs) do
+                            if log and log.Remote == remote then
+                                alreadyRenamed = true
+                                break
+                            end
+                        end
+                        
+                        -- Если не нашли в логах, пытаемся найти связанный скрипт
+                        if not alreadyRenamed then
+                            local remotePath = remote:GetFullName()
+                            
+                            -- Попробуем найти скрипт по пути remote
+                            local function findScriptByPath()
+                                for _, script in pairs(game:GetDescendants()) do
+                                    if script:IsA("LocalScript") or script:IsA("Script") or script:IsA("ModuleScript") then
+                                        pcall(function()
+                                            local source = ""
+                                            if script:IsA("ModuleScript") then
+                                                source = script.Source
+                                            elseif script:IsA("LocalScript") or script:IsA("Script") then
+                                                source = script:GetFullName()
+                                            end
+                                            
+                                            -- Ищем упоминание remote в пути или исходном коде
+                                            if string.find(source, remote.Name) then
+                                                return script.Name
+                                            end
+                                        end)
+                                    end
+                                end
+                                return nil
+                            end
+                            
+                            local scriptName = findScriptByPath()
+                            
+                            if scriptName then
+                                local newName = scriptName .. "_" .. remote.ClassName
+                                pcall(function()
+                                    local oldName = remote.Name
+                                    remote.Name = newName
+                                    
+                                    print(string.format("[RemoteRenamer] ✓ (поиск) %s.%s -> %s", 
+                                        remote.ClassName, oldName, newName))
+                                    
+                                    renamedCount = renamedCount + 1
+                                end)
+                            else
+                                failedCount = failedCount + 1
+                            end
+                        end
+                    end
+                end
+            end)
+        end
+    end
+    
+    -- Ищем оставшиеся ремоуты
+    findAndRenameRemainingRemotes()
+    
+    -- Обновляем UI
+    TextLabel.Text = string.format("Готово! Переименовано: %d, Не удалось: %d", renamedCount, failedCount)
+    
+    -- Обновляем кнопки в логах (если нужно)
+    if selected then
+        eventSelect(selected.Log)
+    end
+    
+    return renamedCount
+end
+
+-- Функция для переименования конкретного remote
+local function renameRemote(remote, callingScript)
+    if not remote or not callingScript then
+        return false
+    end
+    
+    local success = pcall(function()
+        local oldName = remote.Name
+        local newName = callingScript.Name .. "_" .. remote.ClassName
+        remote.Name = newName
+        
+        -- Обновляем логи SimpleSpy
+        for _, log in pairs(logs) do
+            if log and log.Remote == remote then
+                log.Name = newName
+                if log.Log and log.Log:FindFirstChild("Text") then
+                    log.Log.Text.Text = newName
+                end
+            end
+        end
+        
+        print(string.format("[RemoteRenamer] Переименован: %s -> %s", oldName, newName))
+    end)
+    
+    return success
+end
+
+-- Кнопка для переименования выбранного remote
+local function addSingleRemoteRenamerButton()
+    SimpleSpy:newButton(
+        "Rename This Remote",
+        function() 
+            if selected and selected.Remote and selected.Source then
+                return "Переименовать выбранный Remote в: " .. selected.Source.Name
+            else
+                return "Выберите Remote для переименования"
+            end
+        end,
+        function()
+            if selected and selected.Remote and selected.Source then
+                local success = renameRemote(selected.Remote, selected.Source)
+                if success then
+                    TextLabel.Text = "Remote переименован!"
+                    -- Обновляем кнопку
+                    eventSelect(selected.Log)
+                else
+                    TextLabel.Text = "Ошибка при переименовании"
+                end
+            else
+                TextLabel.Text = "Выберите Remote для переименования"
+            end
+        end
+    )
+end
+
+-- Автоматическое переименование при новом логе
+local originalRemoteHandler = remoteHandler
+function remoteHandler(data)
+    -- Вызываем оригинальную функцию
+    originalRemoteHandler(data)
+    
+    -- Автоматически переименовываем новый remote
+    if data and data.remote and data.callingscript then
+        renameRemote(data.remote, data.callingscript)
+    end
+end
+
+-- GUI для ручного управления
+local function createRemoteRenamerGUI()
+    local ScreenGui = Instance.new("ScreenGui")
+    ScreenGui.Name = "SimpleSpyRemoteRenamer"
+    ScreenGui.Parent = SimpleSpy3
+    
+    local MainFrame = Instance.new("Frame")
+    MainFrame.Size = UDim2.new(0, 250, 0, 150)
+    MainFrame.Position = UDim2.new(0.5, -125, 0.5, -75)
+    MainFrame.BackgroundColor3 = Color3.fromRGB(37, 36, 38)
+    MainFrame.BorderSizePixel = 0
+    MainFrame.Parent = ScreenGui
+    
+    local Title = Instance.new("TextLabel")
+    Title.Text = "Remote Renamer"
+    Title.Size = UDim2.new(1, 0, 0, 30)
+    Title.BackgroundColor3 = Color3.fromRGB(53, 52, 55)
+    Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+    Title.Font = Enum.Font.SourceSansBold
+    Title.TextSize = 16
+    Title.Parent = MainFrame
+    
+    local RenameAllButton = Instance.new("TextButton")
+    RenameAllButton.Text = "Переименовать все"
+    RenameAllButton.Size = UDim2.new(0.8, 0, 0, 30)
+    RenameAllButton.Position = UDim2.new(0.1, 0, 0.3, 0)
+    RenameAllButton.BackgroundColor3 = Color3.fromRGB(92, 126, 229)
+    RenameAllButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    RenameAllButton.Parent = MainFrame
+    
+    local AutoRenameToggle = Instance.new("TextButton")
+    AutoRenameToggle.Text = "Авто-переименование: ВКЛ"
+    AutoRenameToggle.Size = UDim2.new(0.8, 0, 0, 30)
+    AutoRenameToggle.Position = UDim2.new(0.1, 0, 0.6, 0)
+    AutoRenameToggle.BackgroundColor3 = Color3.fromRGB(68, 206, 91)
+    AutoRenameToggle.TextColor3 = Color3.fromRGB(255, 255, 255)
+    AutoRenameToggle.Parent = MainFrame
+    
+    local StatusLabel = Instance.new("TextLabel")
+    StatusLabel.Text = "Готов"
+    StatusLabel.Size = UDim2.new(1, 0, 0, 20)
+    StatusLabel.Position = UDim2.new(0, 0, 0.9, 0)
+    StatusLabel.BackgroundTransparency = 1
+    StatusLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+    StatusLabel.TextSize = 12
+    StatusLabel.Parent = MainFrame
+    
+    -- Обработчики событий
+    local autoRenameEnabled = true
+    
+    RenameAllButton.MouseButton1Click:Connect(function()
+        StatusLabel.Text = "Работаю..."
+        local count = renameAllRemotesFromLogs()
+        StatusLabel.Text = "Готово! " .. tostring(count) .. " переименовано"
+    end)
+    
+    AutoRenameToggle.MouseButton1Click:Connect(function()
+        autoRenameEnabled = not autoRenameEnabled
+        if autoRenameEnabled then
+            AutoRenameToggle.Text = "Авто-переименование: ВКЛ"
+            AutoRenameToggle.BackgroundColor3 = Color3.fromRGB(68, 206, 91)
+        else
+            AutoRenameToggle.Text = "Авто-переименование: ВЫКЛ"
+            AutoRenameToggle.BackgroundColor3 = Color3.fromRGB(206, 68, 68)
+        end
+    end)
+    
+    -- Делаем фрейм перетаскиваемым
+    local dragging
+    local dragInput
+    local dragStart
+    local startPos
+    
+    MainFrame.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            dragging = true
+            dragStart = input.Position
+            startPos = MainFrame.Position
+            
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    dragging = false
+                end
+            end)
+        end
+    end)
+    
+    MainFrame.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement then
+            dragInput = input
+        end
+    end)
+    
+    UserInputService.InputChanged:Connect(function(input)
+        if input == dragInput and dragging then
+            local delta = input.Position - dragStart
+            MainFrame.Position = UDim2.new(
+                startPos.X.Scale, 
+                startPos.X.Offset + delta.X,
+                startPos.Y.Scale, 
+                startPos.Y.Offset + delta.Y
+            )
+        end
+    end)
+    
+    -- Кнопка закрытия
+    local CloseButton = Instance.new("TextButton")
+    CloseButton.Text = "X"
+    CloseButton.Size = UDim2.new(0, 25, 0, 25)
+    CloseButton.Position = UDim2.new(1, -25, 0, 0)
+    CloseButton.BackgroundColor3 = Color3.fromRGB(206, 68, 68)
+    CloseButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    CloseButton.Parent = MainFrame
+    
+    CloseButton.MouseButton1Click:Connect(function()
+        ScreenGui:Destroy()
+    end)
+    
+    return ScreenGui
+end
+
+-- Инициализация
+local function initRemoteRenamer()
+    -- Добавляем кнопки в SimpleSpy
+    addRemoteRenamerButton()
+    addSingleRemoteRenamerButton()
+    
+    -- Создаем GUI
+    createRemoteRenamerGUI()
+    
+    print("[RemoteRenamer] Загружен и готов к работе!")
+    print("[RemoteRenamer] Используйте кнопку 'Rename Remotes' в SimpleSpy")
+end
+
+-- Запускаем после загрузки SimpleSpy
+if getgenv().SimpleSpyExecuted then
+    spawn(function()
+        wait(1) -- Даем SimpleSpy полностью загрузиться
+        initRemoteRenamer()
+    end)
+else
+    -- Ждем загрузки SimpleSpy
+    local connection
+    connection = game:GetService("RunService").Heartbeat:Connect(function()
+        if getgenv().SimpleSpyExecuted then
+            connection:Disconnect()
+            wait(0.5)
+            initRemoteRenamer()
+        end
+    end)
+end
+
+-- Экспортируем функции
+getgenv().RemoteRenamer = {
+    renameAll = renameAllRemotesFromLogs,
+    renameRemote = renameRemote,
+    showGUI = createRemoteRenamerGUI
+}
