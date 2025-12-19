@@ -2078,29 +2078,35 @@ newButton(
                     end
                 end
                 
-                -- Используем DebugId для уникальной идентификации ремоута
-                local remoteId = OldDebugId(log.Remote)
+                -- Используем путь к ремоуту для уникальной идентификации
+                local remotePath = log.Remote:GetFullName()
+                local remoteKey = log.Remote.ClassName .. "|" .. remotePath
                 
-                if not remoteStats[remoteId] then
+                if not remoteStats[remoteKey] then
                     -- Первое появление этого ремоута
-                    remoteStats[remoteId] = {
+                    remoteStats[remoteKey] = {
                         name = log.Name,
                         remote = log.Remote,
+                        remotePath = remotePath,
+                        remoteClass = log.Remote.ClassName,
                         source = log.Source,
                         count = 1
                     }
                 else
                     -- Увеличиваем счетчик вызовов
-                    remoteStats[remoteId].count = remoteStats[remoteId].count + 1
+                    remoteStats[remoteKey].count = remoteStats[remoteKey].count + 1
                 end
             end
         end
         
         -- Преобразуем в массив и сортируем
         for _, stat in pairs(remoteStats) do
+            -- Используем v2s для получения правильного пути к ремоуту
+            local remotePath = v2s(stat.remote)
+            
             local scriptInfo = string.format("[%s] %s (called %d times) -> %s",
-                stat.name,
-                tostring(stat.remote),
+                stat.remoteClass,
+                remotePath,
                 stat.count,
                 stat.source and v2s(stat.source) or "nil"
             )
