@@ -2057,107 +2057,112 @@ newButton("Run Code",
     end
 )
 
---- Gets the calling script for ALL logged remotes with GetChildren indexes
+--- Gets ALL remote scripts with detailed GetChildren paths
 newButton(
     "Get Script",
     function() 
-        return "Click to copy all unique remote scripts with GetChildren[] indexes" 
+        return "Click to copy ALL remote paths with GetChildren[]" 
     end,
     function()
-        local remoteStats = {}
-        local allScripts = {}
+        -- Собираем все уникальные ремоуты по DebugId
+        local uniqueRemotes = {}
+        local remoteList = {}
         
         for _, log in ipairs(logs) do
             if log and log.Remote then
-                -- Используем DebugId как уникальный ключ
                 local remoteId = OldDebugId(log.Remote)
                 
-                if not remoteStats[remoteId] then
-                    remoteStats[remoteId] = {
-                        name = log.Name,
+                if not uniqueRemotes[remoteId] then
+                    uniqueRemotes[remoteId] = {
                         remote = log.Remote,
                         source = log.Source,
                         count = 1,
-                        class = log.Remote.ClassName,
                         debugId = remoteId
                     }
                 else
-                    remoteStats[remoteId].count = remoteStats[remoteId].count + 1
+                    uniqueRemotes[remoteId].count = uniqueRemotes[remoteId].count + 1
                 end
             end
         end
         
-        -- Функция для получения пути с GetChildren[]
-        local function getRemotePathWithIndex(remote)
-            local parent = remote.Parent
-            if not parent then
-                return 'nil'
-            end
+        -- Функция для получения полного пути с GetChildren
+        local function getFullRemotePath(remote)
+            local current = remote
+            local pathParts = {}
             
-            -- Получаем путь к родителю
-            local parentPath
-            if parent == game then
-                parentPath = "game"
-            else
-                -- Получаем путь к родителю через i2p
-                parentPath = i2p(parent)
-                if parentPath == "nil" then
-                    parentPath = v2s(parent)
+            -- Собираем путь от ремоута до game
+            while current and current ~= game do
+                local parent = current.Parent
+                if not parent then break
+                
+                local children = parent:GetChildren()
+                local index = nil
+                
+                -- Ищем индекс текущего объекта среди детей родителя
+                for i, child in ipairs(children) do
+                    if child == current then
+                        index = i
+                        break
+                    end
                 end
-            end
-            
-            -- Находим индекс ремоута среди детей родителя
-            local children = parent:GetChildren()
-            local foundIndex = nil
-            
-            for i, child in ipairs(children) do
-                if child == remote then
-                    foundIndex = i
-                    break
+                
+                if index then
+                    table.insert(pathParts, 1, string.format(":GetChildren()[%d]", index))
+                else
+                    -- Если не нашли индекс, используем имя
+                    if current.Name:match("^[%a_]+[%w_]*$") then
+                        table.insert(pathParts, 1, ':WaitForChild("' .. current.Name .. '")')
+                    else
+                        table.insert(pathParts, 1, ':GetChildren()[' .. tostring(index or 0) .. ']')
+                    end
                 end
+                
+                current = parent
             end
             
-            if foundIndex then
-                return string.format("%s:GetChildren()[%d]", parentPath, foundIndex)
-            else
-                -- Если не нашли, используем WaitForChild с именем
-                return string.format('%s:WaitForChild("%s")', parentPath, remote.Name)
+            -- Начинаем с game
+            local fullPath = "game"
+            for _, part in ipairs(pathParts) do
+                fullPath = fullPath .. part
             end
+            
+            return fullPath
         end
         
-        -- Обрабатываем каждый ремоут
-        for id, stat in pairs(remoteStats) do
-            local remotePath = getRemotePathWithIndex(stat.remote)
+        -- Обрабатываем все ремоуты
+        for id, data in pairs(uniqueRemotes) do
+            local remotePath = getFullRemotePath(data.remote)
             
-            local scriptInfo = string.format("[%s] %s (called %d times) -> %s",
-                stat.class,
+            if not data.source then
+                local func = data.func
+                if func and typeof(func) ~= 'string' then
+                    data.source = rawget(getfenv(func), "script")
+                end
+            end
+            
+            local entry = string.format("[%s] %s\nDebugId: %s\nCalled: %d times\nFrom: %s",
+                data.remote.ClassName,
                 remotePath,
-                stat.count,
-                stat.source and v2s(stat.source) or "nil"
+                data.debugId,
+                data.count,
+                data.source and v2s(data.source) or "nil"
             )
-            table.insert(allScripts, scriptInfo)
+            
+            table.insert(remoteList, entry)
         end
         
         -- Сортируем по количеству вызовов
-        table.sort(allScripts, function(a, b)
-            local countA = tonumber(a:match("called (%d+) times")) or 0
-            local countB = tonumber(b:match("called (%d+) times")) or 0
+        table.sort(remoteList, function(a, b)
+            local countA = tonumber(a:match("Called: (%d+) times")) or 0
+            local countB = tonumber(b:match("Called: (%d+) times")) or 0
             return countA > countB
         end)
         
-        -- Статистика
-        local totalCalls = 0
-        for _, stat in pairs(remoteStats) do
-            totalCalls = totalCalls + stat.count
-        end
-        
-        local header = string.format("=== Remote Calling Scripts ===\n")
-        header = header .. string.format("Unique remotes: %d | Total calls: %d\n\n", #allScripts, totalCalls)
-        local combinedScripts = header .. table.concat(allScripts, "\n---\n")
-        
-        if #allScripts > 0 then
-            setclipboard(combinedScripts)
-            TextLabel.Text = string.format("Copied %d unique remotes!", #allScripts)
+        if #remoteList > 0 then
+            local header = string.format("Found %d unique remote instances:\n\n", #remoteList)
+            local combined = header .. table.concat(remoteList, "\n\n---\n\n")
+            setclipboard(combined)
+            TextLabel.Text = string.format("Copied %d unique remote instances!", #remoteList)
         else
             TextLabel.Text = "No remotes found!"
         end
