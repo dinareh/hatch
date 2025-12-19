@@ -2057,53 +2057,15 @@ newButton("Run Code",
     end
 )
 
---- Gets the calling script for ALL logged remotes with GetChildren path
+--- Gets the calling script for ALL logged remotes (always uses GetChildren)
 newButton(
     "Get Script",
     function() 
-        return "Click to copy calling scripts with GetChildren[] paths" 
+        return "Click to copy calling scripts with GetChildren paths" 
     end,
     function()
         local remoteStats = {}
         local allScripts = {}
-        
-        -- Функция для получения оптимального пути
-        local function getOptimalRemotePath(remote)
-            local parent = remote.Parent
-            if not parent then
-                return v2s(remote)
-            end
-            
-            -- Получаем всех детей родителя
-            local children = parent:GetChildren()
-            local index = nil
-            
-            -- Ищем индекс нашего ремоута
-            for i, child in ipairs(children) do
-                if child == remote then
-                    index = i
-                    break
-                end
-            end
-            
-            if index then
-                -- Проверяем, имеет ли remote нормальное имя
-                if remote.Name:match("^[%a_]+[%w_]*$") and remote.Name ~= "" then
-                    -- Если имя нормальное, используем WaitForChild
-                    return v2s(remote)
-                else
-                    -- Если имя странное или числовое, используем GetChildren
-                    local parentPath = v2s(parent)
-                    -- Очищаем путь родителя от конечных WaitForChild
-                    parentPath = parentPath:gsub(":WaitForChild%([^%)]+%)$", "")
-                    parentPath = parentPath:gsub(":FindFirstChild%([^%)]+%)$", "")
-                    
-                    return string.format("%s:GetChildren()[%d]", parentPath, index)
-                end
-            end
-            
-            return v2s(remote)
-        end
         
         for _, log in ipairs(logs) do
             if log and log.Remote then
@@ -2118,7 +2080,6 @@ newButton(
                 
                 if not remoteStats[remoteFullPath] then
                     remoteStats[remoteFullPath] = {
-                        name = log.Name,
                         remote = log.Remote,
                         source = log.Source,
                         count = 1,
@@ -2130,9 +2091,29 @@ newButton(
             end
         end
         
-        -- Обрабатываем и форматируем
+        -- Функция для получения пути с GetChildren
+        local function getPathWithGetChildren(remote)
+            local parent = remote.Parent
+            if not parent then
+                return v2s(remote)
+            end
+            
+            local children = parent:GetChildren()
+            for i, child in ipairs(children) do
+                if child == remote then
+                    local parentPath = v2s(parent)
+                    -- Очищаем последний WaitForChild если есть
+                    parentPath = parentPath:gsub(":WaitForChild%([^%)]+%)$", "")
+                    return string.format("%s:GetChildren()[%d]", parentPath, i)
+                end
+            end
+            
+            return v2s(remote)
+        end
+        
+        -- Формируем вывод
         for _, stat in pairs(remoteStats) do
-            local remotePath = getOptimalRemotePath(stat.remote)
+            local remotePath = getPathWithGetChildren(stat.remote)
             
             local scriptInfo = string.format("[%s] %s (called %d times) -> %s",
                 stat.class,
@@ -2143,26 +2124,17 @@ newButton(
             table.insert(allScripts, scriptInfo)
         end
         
-        -- Сортируем
+        -- Сортируем по вызовам
         table.sort(allScripts, function(a, b)
             local countA = tonumber(a:match("called (%d+) times")) or 0
             local countB = tonumber(b:match("called (%d+) times")) or 0
             return countA > countB
         end)
         
-        -- Статистика
-        local totalCalls = 0
-        for _, stat in pairs(remoteStats) do
-            totalCalls = totalCalls + stat.count
-        end
-        
-        local header = string.format("Remote Calling Scripts - %d unique, %d total calls\n\n", 
-            #allScripts, totalCalls)
-        local combinedScripts = header .. table.concat(allScripts, "\n---\n")
-        
         if #allScripts > 0 then
+            local combinedScripts = table.concat(allScripts, "\n---\n")
             setclipboard(combinedScripts)
-            TextLabel.Text = string.format("Copied %d remotes!", #allScripts)
+            TextLabel.Text = string.format("Copied %d unique remotes!", #allScripts)
         else
             TextLabel.Text = "No remotes found!"
         end
