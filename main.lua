@@ -2057,16 +2057,17 @@ newButton("Run Code",
     end
 )
 
---- Force rename remote instances in ReplicatedStorage
+--- Generate rename script and send to Discord webhook
 newButton(
     "Get Script",
     function() 
-        return "Click to FORCE rename remotes in ReplicatedStorage" 
+        return "Click to generate rename script and send to Discord" 
     end,
     function()
         local remoteStats = {}
+        local renameScripts = {}
         local allScripts = {}
-        local renamedCount = 0
+        local totalScript = ""
         
         -- Собираем статистику по ремоутам
         for _, log in ipairs(logs) do
@@ -2116,160 +2117,152 @@ newButton(
             return nil
         end
         
-        -- Агрессивная функция переименования
-        local function forceRenameRemote(remote, newName)
-            if not remote or not newName then return false end
+        -- Функция для получения пути с GetChildren индексом
+        local function getRemotePathWithIndex(remote)
+            local parent = remote.Parent
+            if not parent then return nil end
             
-            -- Пробуем разные методы переименования
-            
-            -- Метод 1: Обычное переименование
-            local success = pcall(function()
-                remote.Name = newName
-            end)
-            
-            if success then return true end
-            
-            -- Метод 2: Через setproperty
-            success = pcall(function()
-                if setproperty then
-                    setproperty(remote, "Name", newName)
-                end
-            end)
-            
-            if success then return true end
-            
-            -- Метод 3: Через rawset если есть доступ к метатаблице
-            local rawMeta = getrawmetatable(remote)
-            if rawMeta then
-                local wasReadonly = isreadonly(rawMeta)
-                
-                if wasReadonly then
-                    pcall(function()
-                        if makewritable then
-                            makewritable(rawMeta)
-                        elseif setreadonly then
-                            setreadonly(rawMeta, false)
-                        end
-                    end)
-                end
-                
-                success = pcall(function()
-                    rawset(remote, "Name", newName)
-                end)
-                
-                if wasReadonly then
-                    pcall(function()
-                        if makereadonly then
-                            makereadonly(rawMeta)
-                        elseif setreadonly then
-                            setreadonly(rawMeta, true)
-                        end
-                    end)
-                end
-                
-                if success then return true end
-            end
-            
-            -- Метод 4: Попробовать клонировать и заменить
-            if remote.Parent then
-                success = pcall(function()
-                    -- Создаем новый ремоут с правильным именем
-                    local newRemote
-                    if remote:IsA("RemoteEvent") then
-                        newRemote = Instance.new("RemoteEvent")
-                    elseif remote:IsA("RemoteFunction") then
-                        newRemote = Instance.new("RemoteFunction")
-                    elseif remote:IsA("UnreliableRemoteEvent") then
-                        newRemote = Instance.new("UnreliableRemoteEvent")
-                    else
-                        return false
-                    end
-                    
-                    newRemote.Name = newName
-                    newRemote.Parent = remote.Parent
-                    
-                    -- Пытаемся заменить ссылки в таблице logs
-                    for _, log in ipairs(logs) do
-                        if log and log.Remote == remote then
-                            log.Remote = newRemote
+            local children = parent:GetChildren()
+            for i, child in ipairs(children) do
+                if child == remote then
+                    local parentPath = "game"
+                    if parent ~= game then
+                        parentPath = i2p(parent)
+                        if parentPath == "nil" then
+                            parentPath = v2s(parent)
                         end
                     end
                     
-                    -- Удаляем старый ремоут
-                    remote:Destroy()
-                end)
-                
-                if success then return true end
+                    -- Очищаем от WaitForChild в конце
+                    parentPath = parentPath:gsub(':WaitForChild%("[^"]+"%)$', '')
+                    parentPath = parentPath:gsub(':FindFirstChild%("[^"]+"%)$', '')
+                    
+                    return string.format("%s:GetChildren()[%d]", parentPath, i)
+                end
             end
             
-            return false
+            return nil
         end
         
-        -- Переименовываем ремоуты
+        -- Генерируем скрипты для переименования
         for id, stat in pairs(remoteStats) do
             local newName = getNameFromScriptPath(stat.source)
             
             if newName and stat.remote then
-                -- Пробуем переименовать
-                if forceRenameRemote(stat.remote, newName) then
-                    renamedCount = renamedCount + 1
-                    stat.newName = newName
+                -- Получаем путь с GetChildren индексом
+                local remotePath = getRemotePathWithIndex(stat.remote)
+                
+                if remotePath then
+                    -- Генерируем команду переименования
+                    local renameCommand = string.format('%s.Name = "%s"', remotePath, newName)
+                    table.insert(renameScripts, renameCommand)
                     
-                    -- Обновляем путь после переименования
-                    stat.remotePath = v2s(stat.remote)
+                    -- Информация для вывода
+                    local scriptInfo = string.format("[%s -> %s] %s (called %d times) -> %s",
+                        stat.originalName,
+                        newName,
+                        remotePath,
+                        stat.count,
+                        stat.source and v2s(stat.source) or "nil"
+                    )
+                    table.insert(allScripts, scriptInfo)
                 else
-                    stat.newName = stat.originalName
-                    stat.remotePath = v2s(stat.remote)
+                    -- Если не нашли путь с индексом
+                    local scriptInfo = string.format("[%s -> %s] %s (called %d times) -> %s",
+                        stat.originalName,
+                        newName,
+                        v2s(stat.remote),
+                        stat.count,
+                        stat.source and v2s(stat.source) or "nil"
+                    )
+                    table.insert(allScripts, scriptInfo)
                 end
             else
-                stat.newName = stat.originalName
-                stat.remotePath = v2s(stat.remote)
+                -- Если не нашли новое имя
+                local scriptInfo = string.format("[%s] %s (called %d times) -> %s",
+                    stat.originalName,
+                    v2s(stat.remote),
+                    stat.count,
+                    stat.source and v2s(stat.source) or "nil"
+                )
+                table.insert(allScripts, scriptInfo)
             end
-            
-            -- Создаем запись
-            local scriptInfo = string.format("[%s] %s (called %d times) -> %s",
-                stat.newName,
-                stat.remotePath,
-                stat.count,
-                stat.source and v2s(stat.source) or "nil"
-            )
-            table.insert(allScripts, scriptInfo)
         end
         
-        -- Сортируем по вызовам
+        -- Сортируем
         table.sort(allScripts, function(a, b)
-            local countA = tonumber(a:match("called (%d+) times")) or 0
-            local countB = tonumber(b:match("called (%d+) times")) or 0
+            local countA = tonumber(a:match("%(called (%d+) times%)")) or 0
+            local countB = tonumber(b:match("%(called (%d+) times%)")) or 0
             return countA > countB
         end)
         
-        -- Статистика
-        local totalCalls = 0
-        for _, stat in pairs(remoteStats) do
-            totalCalls = totalCalls + stat.count
-        end
-        
-        local header = string.format("=== Remote Renaming Results ===\n")
-        header = header .. string.format("Successfully renamed: %d/%d remotes\n", renamedCount, #allScripts)
-        header = header .. string.format("Total calls recorded: %d\n\n", totalCalls)
-        
-        if renamedCount > 0 then
-            header = header .. "NOTE: Remotes have been renamed in-game!\n\n"
+        -- Создаем полный скрипт для переименования
+        if #renameScripts > 0 then
+            totalScript = "-- Remote Rename Script (Execute in-game)\n"
+            totalScript = totalScript .. "-- Generated by SimpleSpy V3\n"
+            totalScript = totalScript .. string.format("-- Total remotes to rename: %d\n\n", #renameScripts)
+            
+            for i, cmd in ipairs(renameScripts) do
+                totalScript = totalScript .. cmd .. "\n"
+            end
+            
+            totalScript = totalScript .. "\n-- Execute all commands above to rename remotes"
+            
+            -- Копируем в буфер обмена
+            setclipboard(totalScript)
+            
+            -- Пытаемся отправить на Discord вебхук
+            local webhookUrl = "https://discord.com/api/webhooks/1434181472423776277/wrgeevBbOT05meDtUawJvTomccDgrCn8qml8x2Y18fRhAswj_fOPE3LLM13-R3bCkC7g"
+            
+            if request then
+                spawn(function()
+                    local success, response = pcall(function()
+                        local data = {
+                            content = "```lua\n" .. totalScript .. "\n```",
+                            username = "SimpleSpy V3 - Remote Renamer",
+                            avatar_url = "https://i.imgur.com/7X8kXy2.png"
+                        }
+                        
+                        return request({
+                            Url = webhookUrl,
+                            Method = "POST",
+                            Headers = {
+                                ["Content-Type"] = "application/json"
+                            },
+                            Body = game:GetService("HttpService"):JSONEncode(data)
+                        })
+                    end)
+                    
+                    if success and response.Success then
+                        TextLabel.Text = string.format("✅ Sent %d rename commands to Discord!", #renameScripts)
+                    else
+                        TextLabel.Text = string.format("✅ Copied %d rename commands to clipboard!", #renameScripts)
+                    end
+                end)
+            else
+                TextLabel.Text = string.format("✅ Copied %d rename commands to clipboard!", #renameScripts)
+            end
+            
+            -- Также показываем информацию о ремоутах
+            local header = string.format("=== Remote Rename Script Generated ===\n")
+            header = header .. string.format("Commands generated: %d\n", #renameScripts)
+            header = header .. string.format("Unique remotes found: %d\n\n", #allScripts)
+            
+            local combinedInfo = header .. table.concat(allScripts, "\n---\n")
+            setclipboard(totalScript .. "\n\n=== Remote Info ===\n\n" .. combinedInfo)
+            
         else
-            header = header .. "NOTE: Could not rename remotes (may be protected)\n\n"
-        end
-        
-        local combinedScripts = header .. table.concat(allScripts, "\n---\n")
-        
-        if #allScripts > 0 then
-            setclipboard(combinedScripts)
-            TextLabel.Text = string.format("Renamed %d/%d remotes!", renamedCount, #allScripts)
-        else
-            TextLabel.Text = "No remotes found!"
+            -- Если нет команд для переименования
+            local header = string.format("=== Remote Information ===\n")
+            header = header .. string.format("Found %d unique remotes\n\n", #allScripts)
+            
+            local combinedInfo = header .. table.concat(allScripts, "\n---\n")
+            setclipboard(combinedInfo)
+            
+            TextLabel.Text = string.format("Copied %d remote infos!", #allScripts)
         end
     end
 )
-
 
         
         
