@@ -2057,13 +2057,16 @@ newButton("Run Code",
     end
 )
 
---- Gets the calling script (not super reliable but w/e)
+--- Gets the calling script for ALL logged remotes (unique only)
 newButton(
     "Get Script",
     function() 
-        return "Click to copy calling scripts for ALL logged remotes to clipboard\nWARNING: Not super reliable, nil == could not find" 
+        return "Click to copy calling scripts for ALL UNIQUE logged remotes\nWARNING: Not super reliable, nil == could not find" 
     end,
     function()
+        -- Используем таблицу для отслеживания уникальных комбинаций
+        local uniqueScripts = {}
+        local uniqueCombinations = {}
         local allScripts = {}
         
         for _, log in ipairs(logs) do
@@ -2076,27 +2079,39 @@ newButton(
                     end
                 end
                 
-                -- Добавить информацию о remote и его source
-                local scriptInfo = string.format("[%s] %s -> %s",
-                    log.Name,
-                    tostring(log.Remote),
-                    log.Source and v2s(log.Source) or "nil"
-                )
+                -- Создаем ключ для уникальности: комбинация Remote + Source
+                local remoteDebugId = OldDebugId(log.Remote)
+                local sourcePath = log.Source and log.Source:GetFullName() or "nil"
+                local uniqueKey = string.format("%s|%s", remoteDebugId, sourcePath)
                 
-                table.insert(allScripts, scriptInfo)
+                -- Проверяем, не видели ли мы уже эту комбинацию
+                if not uniqueCombinations[uniqueKey] then
+                    uniqueCombinations[uniqueKey] = true
+                    
+                    -- Добавить информацию о remote и его source
+                    local scriptInfo = string.format("[%s] %s -> %s",
+                        log.Name,
+                        tostring(log.Remote),
+                        log.Source and v2s(log.Source) or "nil"
+                    )
+                    
+                    table.insert(uniqueScripts, scriptInfo)
+                end
             end
         end
         
-        if #allScripts > 0 then
-            local combinedScripts = table.concat(allScripts, "\n---\n")
+        -- Сортируем по имени для удобства чтения
+        table.sort(uniqueScripts)
+        
+        if #uniqueScripts > 0 then
+            local combinedScripts = table.concat(uniqueScripts, "\n---\n")
             setclipboard(combinedScripts)
-            TextLabel.Text = string.format("Copied %d scripts!", #allScripts)
+            TextLabel.Text = string.format("Copied %d unique scripts!", #uniqueScripts)
         else
             TextLabel.Text = "No scripts found!"
         end
     end
 )
-
 --- Decompiles the script that fired the remote and puts it in the code box
 newButton("Function Info",function() return "Click to view calling function information" end,
 function()
