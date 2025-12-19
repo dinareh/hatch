@@ -1,23 +1,43 @@
 -- Remote Renamer для SimpleSpy
 -- Переименовывает RemoteEvent и RemoteFunction в их Calling Script
 
+-- Получаем необходимые сервисы
+local UserInputService = game:GetService("UserInputService")
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+
 -- Добавляем кнопку в SimpleSpy
 local function addRemoteRenamerButton()
-    SimpleSpy:newButton(
-        "Rename Remotes",
-        function() return "Переименовать все RemoteEvent/RemoteFunction в их Calling Script" end,
-        function()
-            renameAllRemotesFromLogs()
-        end
-    )
+    if SimpleSpy and SimpleSpy.newButton then
+        SimpleSpy:newButton(
+            "Rename Remotes",
+            function() return "Переименовать все RemoteEvent/RemoteFunction в их Calling Script" end,
+            function()
+                renameAllRemotesFromLogs()
+            end
+        )
+    else
+        warn("[RemoteRenamer] SimpleSpy не найден!")
+    end
 end
 
 -- Основная функция переименования на основе логов SimpleSpy
 local function renameAllRemotesFromLogs()
+    if not TextLabel then
+        warn("[RemoteRenamer] TextLabel не найден!")
+        return 0
+    end
+    
     TextLabel.Text = "Начинаю переименование..."
     
     local renamedCount = 0
     local failedCount = 0
+    
+    -- Проверяем, что logs существует
+    if not logs then
+        TextLabel.Text = "Логи SimpleSpy не найдены!"
+        return 0
+    end
     
     -- Используем логи SimpleSpy для получения информации о calling script
     for _, log in pairs(logs) do
@@ -41,6 +61,11 @@ local function renameAllRemotesFromLogs()
                         remote.ClassName, oldName, newName))
                     
                     renamedCount = renamedCount + 1
+                    
+                    -- Обновляем лог в SimpleSpy
+                    if log.Log and log.Log:FindFirstChild("Text") then
+                        log.Log.Text.Text = newName
+                    end
                 end)
             else
                 failedCount = failedCount + 1
@@ -69,31 +94,25 @@ local function renameAllRemotesFromLogs()
                         local alreadyRenamed = false
                         
                         -- Проверяем, не переименовывали ли мы уже этот remote
-                        for _, log in pairs(logs) do
-                            if log and log.Remote == remote then
-                                alreadyRenamed = true
-                                break
+                        if logs then
+                            for _, log in pairs(logs) do
+                                if log and log.Remote == remote then
+                                    alreadyRenamed = true
+                                    break
+                                end
                             end
                         end
                         
                         -- Если не нашли в логах, пытаемся найти связанный скрипт
                         if not alreadyRenamed then
-                            local remotePath = remote:GetFullName()
-                            
                             -- Попробуем найти скрипт по пути remote
                             local function findScriptByPath()
                                 for _, script in pairs(game:GetDescendants()) do
                                     if script:IsA("LocalScript") or script:IsA("Script") or script:IsA("ModuleScript") then
                                         pcall(function()
-                                            local source = ""
-                                            if script:IsA("ModuleScript") then
-                                                source = script.Source
-                                            elseif script:IsA("LocalScript") or script:IsA("Script") then
-                                                source = script:GetFullName()
-                                            end
-                                            
-                                            -- Ищем упоминание remote в пути или исходном коде
-                                            if string.find(source, remote.Name) then
+                                            -- Ищем упоминание remote в имени скрипта
+                                            if string.find(script.Name, remote.Name) or 
+                                               string.find(remote.Name, script.Name) then
                                                 return script.Name
                                             end
                                         end)
@@ -151,11 +170,13 @@ local function renameRemote(remote, callingScript)
         remote.Name = newName
         
         -- Обновляем логи SimpleSpy
-        for _, log in pairs(logs) do
-            if log and log.Remote == remote then
-                log.Name = newName
-                if log.Log and log.Log:FindFirstChild("Text") then
-                    log.Log.Text.Text = newName
+        if logs then
+            for _, log in pairs(logs) do
+                if log and log.Remote == remote then
+                    log.Name = newName
+                    if log.Log and log.Log:FindFirstChild("Text") then
+                        log.Log.Text.Text = newName
+                    end
                 end
             end
         end
@@ -168,53 +189,51 @@ end
 
 -- Кнопка для переименования выбранного remote
 local function addSingleRemoteRenamerButton()
-    SimpleSpy:newButton(
-        "Rename This Remote",
-        function() 
-            if selected and selected.Remote and selected.Source then
-                return "Переименовать выбранный Remote в: " .. selected.Source.Name
-            else
-                return "Выберите Remote для переименования"
-            end
-        end,
-        function()
-            if selected and selected.Remote and selected.Source then
-                local success = renameRemote(selected.Remote, selected.Source)
-                if success then
-                    TextLabel.Text = "Remote переименован!"
-                    -- Обновляем кнопку
-                    eventSelect(selected.Log)
+    if SimpleSpy and SimpleSpy.newButton then
+        SimpleSpy:newButton(
+            "Rename This Remote",
+            function() 
+                if selected and selected.Remote and selected.Source then
+                    return "Переименовать выбранный Remote в: " .. selected.Source.Name
                 else
-                    TextLabel.Text = "Ошибка при переименовании"
+                    return "Выберите Remote для переименования"
                 end
-            else
-                TextLabel.Text = "Выберите Remote для переименования"
+            end,
+            function()
+                if TextLabel then
+                    if selected and selected.Remote and selected.Source then
+                        local success = renameRemote(selected.Remote, selected.Source)
+                        if success then
+                            TextLabel.Text = "Remote переименован!"
+                            -- Обновляем кнопку
+                            eventSelect(selected.Log)
+                        else
+                            TextLabel.Text = "Ошибка при переименовании"
+                        end
+                    else
+                        TextLabel.Text = "Выберите Remote для переименования"
+                    end
+                end
             end
-        end
-    )
-end
-
--- Автоматическое переименование при новом логе
-local originalRemoteHandler = remoteHandler
-function remoteHandler(data)
-    -- Вызываем оригинальную функцию
-    originalRemoteHandler(data)
-    
-    -- Автоматически переименовываем новый remote
-    if data and data.remote and data.callingscript then
-        renameRemote(data.remote, data.callingscript)
+        )
     end
 end
 
--- GUI для ручного управления
+-- Упрощенное GUI (без перетаскивания, чтобы избежать ошибок)
 local function createRemoteRenamerGUI()
+    if not SimpleSpy3 then
+        warn("[RemoteRenamer] SimpleSpy3 не найден!")
+        return nil
+    end
+    
     local ScreenGui = Instance.new("ScreenGui")
     ScreenGui.Name = "SimpleSpyRemoteRenamer"
     ScreenGui.Parent = SimpleSpy3
+    ScreenGui.ResetOnSpawn = false
     
     local MainFrame = Instance.new("Frame")
     MainFrame.Size = UDim2.new(0, 250, 0, 150)
-    MainFrame.Position = UDim2.new(0.5, -125, 0.5, -75)
+    MainFrame.Position = UDim2.new(0.5, -125, 0.3, -75)
     MainFrame.BackgroundColor3 = Color3.fromRGB(37, 36, 38)
     MainFrame.BorderSizePixel = 0
     MainFrame.Parent = ScreenGui
@@ -236,16 +255,16 @@ local function createRemoteRenamerGUI()
     RenameAllButton.TextColor3 = Color3.fromRGB(255, 255, 255)
     RenameAllButton.Parent = MainFrame
     
-    local AutoRenameToggle = Instance.new("TextButton")
-    AutoRenameToggle.Text = "Авто-переименование: ВКЛ"
-    AutoRenameToggle.Size = UDim2.new(0.8, 0, 0, 30)
-    AutoRenameToggle.Position = UDim2.new(0.1, 0, 0.6, 0)
-    AutoRenameToggle.BackgroundColor3 = Color3.fromRGB(68, 206, 91)
-    AutoRenameToggle.TextColor3 = Color3.fromRGB(255, 255, 255)
-    AutoRenameToggle.Parent = MainFrame
+    local CloseButton = Instance.new("TextButton")
+    CloseButton.Text = "Закрыть"
+    CloseButton.Size = UDim2.new(0.8, 0, 0, 30)
+    CloseButton.Position = UDim2.new(0.1, 0, 0.6, 0)
+    CloseButton.BackgroundColor3 = Color3.fromRGB(206, 68, 68)
+    CloseButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    CloseButton.Parent = MainFrame
     
     local StatusLabel = Instance.new("TextLabel")
-    StatusLabel.Text = "Готов"
+    StatusLabel.Text = "Готов к работе"
     StatusLabel.Size = UDim2.new(1, 0, 0, 20)
     StatusLabel.Position = UDim2.new(0, 0, 0.9, 0)
     StatusLabel.BackgroundTransparency = 1
@@ -254,109 +273,173 @@ local function createRemoteRenamerGUI()
     StatusLabel.Parent = MainFrame
     
     -- Обработчики событий
-    local autoRenameEnabled = true
-    
     RenameAllButton.MouseButton1Click:Connect(function()
         StatusLabel.Text = "Работаю..."
         local count = renameAllRemotesFromLogs()
         StatusLabel.Text = "Готово! " .. tostring(count) .. " переименовано"
     end)
     
-    AutoRenameToggle.MouseButton1Click:Connect(function()
-        autoRenameEnabled = not autoRenameEnabled
-        if autoRenameEnabled then
-            AutoRenameToggle.Text = "Авто-переименование: ВКЛ"
-            AutoRenameToggle.BackgroundColor3 = Color3.fromRGB(68, 206, 91)
-        else
-            AutoRenameToggle.Text = "Авто-переименование: ВЫКЛ"
-            AutoRenameToggle.BackgroundColor3 = Color3.fromRGB(206, 68, 68)
-        end
+    CloseButton.MouseButton1Click:Connect(function()
+        ScreenGui:Destroy()
     end)
     
-    -- Делаем фрейм перетаскиваемым
-    local dragging
-    local dragInput
-    local dragStart
-    local startPos
+    -- Простая возможность перемещения (клик на заголовок)
+    local dragging = false
+    local dragStart = Vector2.new(0, 0)
+    local frameStart = Vector2.new(0, 0)
     
-    MainFrame.InputBegan:Connect(function(input)
+    Title.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 then
             dragging = true
-            dragStart = input.Position
-            startPos = MainFrame.Position
-            
-            input.Changed:Connect(function()
-                if input.UserInputState == Enum.UserInputState.End then
-                    dragging = false
-                end
-            end)
+            dragStart = Vector2.new(input.Position.X, input.Position.Y)
+            frameStart = Vector2.new(MainFrame.Position.X.Offset, MainFrame.Position.Y.Offset)
         end
     end)
     
-    MainFrame.InputChanged:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseMovement then
-            dragInput = input
+    Title.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            dragging = false
         end
     end)
     
     UserInputService.InputChanged:Connect(function(input)
-        if input == dragInput and dragging then
-            local delta = input.Position - dragStart
+        if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+            local mousePos = UserInputService:GetMouseLocation()
+            local delta = mousePos - dragStart
             MainFrame.Position = UDim2.new(
-                startPos.X.Scale, 
-                startPos.X.Offset + delta.X,
-                startPos.Y.Scale, 
-                startPos.Y.Offset + delta.Y
+                0, frameStart.X + delta.X,
+                0, frameStart.Y + delta.Y
             )
         end
-    end)
-    
-    -- Кнопка закрытия
-    local CloseButton = Instance.new("TextButton")
-    CloseButton.Text = "X"
-    CloseButton.Size = UDim2.new(0, 25, 0, 25)
-    CloseButton.Position = UDim2.new(1, -25, 0, 0)
-    CloseButton.BackgroundColor3 = Color3.fromRGB(206, 68, 68)
-    CloseButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-    CloseButton.Parent = MainFrame
-    
-    CloseButton.MouseButton1Click:Connect(function()
-        ScreenGui:Destroy()
     end)
     
     return ScreenGui
 end
 
--- Инициализация
-local function initRemoteRenamer()
-    -- Добавляем кнопки в SimpleSpy
-    addRemoteRenamerButton()
-    addSingleRemoteRenamerButton()
+-- Функция для добавления кнопки в интерфейс SimpleSpy
+local function addButtonToSimpleSpyInterface()
+    -- Создаем свою кнопку в интерфейсе SimpleSpy
+    local function createSimpleSpyButton()
+        local ButtonTemplate = Create("Frame",{
+            Name = "RemoteRenamerButton",
+            Parent = ScrollingFrame,
+            BackgroundColor3 = Color3.new(1, 1, 1),
+            BackgroundTransparency = 1,
+            Size = UDim2.new(0, 117, 0, 23)
+        })
+        
+        local ColorBar = Create("Frame",{
+            Name = "ColorBar",
+            Parent = ButtonTemplate,
+            BackgroundColor3 = Color3.new(0, 1, 0),
+            BorderSizePixel = 0,
+            Position = UDim2.new(0, 7, 0, 10),
+            Size = UDim2.new(0, 7, 0, 18),
+            ZIndex = 3
+        })
+        
+        local Text = Create("TextLabel",{
+            Text = "Remote Renamer",
+            Name = "Text",
+            Parent = ButtonTemplate,
+            BackgroundColor3 = Color3.new(1, 1, 1),
+            BackgroundTransparency = 1,
+            Position = UDim2.new(0, 19, 0, 10),
+            Size = UDim2.new(0, 69, 0, 18),
+            ZIndex = 2,
+            Font = Enum.Font.SourceSans,
+            TextColor3 = Color3.new(1, 1, 1),
+            TextSize = 14,
+            TextStrokeColor3 = Color3.fromRGB(37, 36, 38),
+            TextXAlignment = Enum.TextXAlignment.Left
+        })
+        
+        local Button = Create("TextButton",{
+            Name = "Button",
+            Parent = ButtonTemplate,
+            BackgroundColor3 = Color3.new(0, 0, 0),
+            BackgroundTransparency = 0.7,
+            BorderColor3 = Color3.new(1, 1, 1),
+            Position = UDim2.new(0, 7, 0, 10),
+            Size = UDim2.new(0, 80, 0, 18),
+            AutoButtonColor = false,
+            Font = Enum.Font.SourceSans,
+            Text = "",
+            TextColor3 = Color3.new(0, 0, 0),
+            TextSize = 14
+        })
+        
+        Button.MouseEnter:Connect(function()
+            makeToolTip(true, "Переименовать все RemoteEvent/RemoteFunction в их Calling Script")
+        end)
+        
+        Button.MouseLeave:Connect(function()
+            makeToolTip(false)
+        end)
+        
+        ButtonTemplate.AncestryChanged:Connect(function()
+            makeToolTip(false)
+        end)
+        
+        Button.MouseButton1Click:Connect(function()
+            renameAllRemotesFromLogs()
+        end)
+        
+        updateFunctionCanvas()
+    end
     
-    -- Создаем GUI
-    createRemoteRenamerGUI()
-    
-    print("[RemoteRenamer] Загружен и готов к работе!")
-    print("[RemoteRenamer] Используйте кнопку 'Rename Remotes' в SimpleSpy")
+    -- Пробуем создать кнопку
+    pcall(createSimpleSpyButton)
 end
 
--- Запускаем после загрузки SimpleSpy
-if getgenv().SimpleSpyExecuted then
-    spawn(function()
-        wait(1) -- Даем SimpleSpy полностью загрузиться
-        initRemoteRenamer()
-    end)
-else
-    -- Ждем загрузки SimpleSpy
-    local connection
-    connection = game:GetService("RunService").Heartbeat:Connect(function()
-        if getgenv().SimpleSpyExecuted then
-            connection:Disconnect()
-            wait(0.5)
-            initRemoteRenamer()
-        end
-    end)
+-- Инициализация
+local function initRemoteRenamer()
+    -- Ждем, пока SimpleSpy полностью загрузится
+    wait(2)
+    
+    -- Пробуем разные способы добавления функционала
+    if SimpleSpy and SimpleSpy.newButton then
+        -- Способ 1: через API SimpleSpy
+        addRemoteRenamerButton()
+        addSingleRemoteRenamerButton()
+        print("[RemoteRenamer] Кнопки добавлены через SimpleSpy API")
+    elseif ScrollingFrame then
+        -- Способ 2: напрямую в интерфейс
+        addButtonToSimpleSpyInterface()
+        print("[RemoteRenamer] Кнопка добавлена напрямую в интерфейс")
+    else
+        print("[RemoteRenamer] Не удалось найти интерфейс SimpleSpy")
+    end
+    
+    -- Создаем GUI
+    local gui = createRemoteRenamerGUI()
+    if gui then
+        print("[RemoteRenamer] GUI создан успешно")
+    end
+    
+    print("[RemoteRenamer] Загружен и готов к работе!")
 end
+
+-- Автоматический запуск
+spawn(function()
+    -- Ждем загрузки SimpleSpy
+    local maxWait = 30 -- максимум 30 секунд ожидания
+    local waited = 0
+    
+    while waited < maxWait do
+        if getgenv().SimpleSpyExecuted then
+            wait(1) -- Даем SimpleSpy полностью инициализироваться
+            initRemoteRenamer()
+            break
+        end
+        wait(1)
+        waited = waited + 1
+    end
+    
+    if waited >= maxWait then
+        warn("[RemoteRenamer] Timeout: SimpleSpy не загрузился за " .. maxWait .. " секунд")
+    end
+end)
 
 -- Экспортируем функции
 getgenv().RemoteRenamer = {
